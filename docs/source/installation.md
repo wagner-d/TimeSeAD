@@ -3,7 +3,6 @@ To install the TimeSeAD library, first clone the code to your local machine:
 ```
 git clone https://github.com/wagner-d/TimeSeAD.git
 ```
-TODO: this link might change
 
 ## Setup an environment
 We recommend to set up a virtual python environment before installing TimeSeAD. The following instructions assume that you are using `conda` for this. 
