@@ -30,6 +30,11 @@ setup(
         'experiments': [
             'pymongo>=3.12',
             'sacred>=0.8',
+        ],
+        'docs': [
+            'sphinx>=6.1',
+            'sphinx-autoapi>=2.1',
+            'myst-parser>=1.0',
         ]
     }
 )
