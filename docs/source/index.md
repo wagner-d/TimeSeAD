@@ -41,7 +41,7 @@ If you use the library in your own work, please consider citing the paper:
 @article{
     wagner2023timesead,
     title={TimeSe{AD}: Benchmarking Deep Multivariate Time-Series Anomaly Detection},
-    author={Wagner, Dennis and Michels, Tobias and Nair, Arjun and Schulz, Florian CF and Rudolph, Maja and Kloft, Marius},
+    author={Wagner, Dennis and Michels, Tobias and Schulz, Florian CF and Nair, Arjun and Rudolph, Maja and Kloft, Marius},
     journal={Transactions on Machine Learning Research},
     year={2023},
     url={https://openreview.net/forum?id=iMmsCI0JsS},
