@@ -1,8 +1,8 @@
 # TimeSeAD - Library for Benchmarking Multivariate Time Series Anomaly Detection
 
 TimeSeAD is a library for developing and evaluating time series anomaly detection methods with focus on multivariate 
-data. It was initially developed in the context of a paper analyzing evaluations of deep learning based methods for 
-multivariate time series anomaly detection:
+data and includes several datasets, methods, and evaluation tools. It was initially developed in the context of a 
+paper analyzing evaluations of deep learning based methods for multivariate time series anomaly detection:
 
 > Developing new methods for detecting anomalies in time series is of great practical significance, but progress is 
 > hindered by the difficulty of assessing the benefit of new methods, for the following reasons. (1) Public benchmarks 
