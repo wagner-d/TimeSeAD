@@ -9,9 +9,6 @@ version: 2
 sphinx:
    configuration: docs/source/conf.py
 
-# Optionally build your docs in additional formats such as PDF
-formats: all
-
 build:
   os: "ubuntu-22.04"
   tools:
