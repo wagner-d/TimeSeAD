@@ -1,0 +1,56 @@
+params:
+  training_experiment: reconstruction.train_anomtransf
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    d_model:
+      - 256
+#      - 384
+      - 512
+    n_heads:
+      - 6
+      - 8
+      - 12
+    e_layers:
+      - 2
+      - 3
+      - 4
+    d_ff:
+      - 256
+#      - 384
+      - 512
+    dropout:
+      - 0.0
+  training:
+    loss:
+      args:
+        lamb:
+          - 3.0
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+#          - 1.0e-3
+#          - 1.0e-2
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+#            - 10
+            - 50
+#            - 100

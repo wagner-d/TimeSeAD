@@ -1,0 +1,60 @@
+params:
+  training_experiment: reconstruction.train_genad
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: ExathlonDataset
+training_param_updates:
+  dataset:
+    name: ExathlonDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    attention_heads:
+      - 12
+      - 16
+    attention_layers:
+      - 2
+      - 4
+      - 8
+    dropout:
+      - 0.0
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 50
+            - 100
+      mask:
+        args:
+          masked_fraction:
+            - 0.2
+          split_folds:
+            - 5
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+          - 1.0e-2
+detector_param_grid:
+  detector_params:
+    threshold_frac:
+      - 0.9
+      - 0.95
+      - 1.05
+      - 1.1
+      - 1.2
+      - 1.3
+      - 1.4
+      - 1.5

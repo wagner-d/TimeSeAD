@@ -1,0 +1,68 @@
+params:
+  training_experiment: other.train_thoc
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: ExathlonDataset
+training_param_updates:
+  dataset:
+    name: ExathlonDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    hidden_sizes:
+      - 32
+      - 64
+#      - 84
+    n_hidden_layers:
+      - 3
+    dilations:
+#      - [1, 2, 4]
+      - [1, 4, 8]
+      - [1, 4, 12]
+#      - [1, 4, 16]
+    clusters_dims:
+      - [6, 6, 6]
+#      - [12, 6, 1]
+#      - [12, 6, 4]
+#      - [18, 6, 1]
+#      - [18, 12, 4]
+#      - [18, 12, 6]
+#      - [32, 12, 6]
+    tau:
+      - 100
+      - 1
+#      - 0.1
+#      - 0.05
+  loss_params:
+    lambda_orth:
+#      - 0.01
+      - 0.1
+      - 1
+      - 10
+#      - 100
+    lambda_tss:
+#      - 0.01
+      - 0.1
+      - 1
+      - 10
+#      - 100
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 100
+#  training:
+#    optimizer:
+#      args:
+#        lr:
+#          - 1.0e-3
+#          - 1.0e-2

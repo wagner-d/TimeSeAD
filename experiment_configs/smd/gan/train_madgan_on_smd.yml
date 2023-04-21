@@ -1,0 +1,56 @@
+params:
+  training_experiment: generative.gan.train_madgan
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    latent_dim:
+      - 15
+    generator_hidden_dims:
+      - [100, 100, 100]
+    discriminator_hidden_dims:
+      - [100]
+      - [100, 100]
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-2
+    trainer:
+      args:
+        disc_iterations:
+          - 1
+        gen_iterations:
+          - 3
+detector_param_grid:
+  detector_params:
+    max_iter:
+      - 10
+      - 100
+    lambder:
+      - 0.3
+      - 0.5
+      - 0.7
+    rec_error_tolerance:
+      - 0.1

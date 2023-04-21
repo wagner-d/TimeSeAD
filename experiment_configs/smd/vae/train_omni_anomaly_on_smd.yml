@@ -1,0 +1,42 @@
+params:
+  training_experiment: generative.vae.train_omni_anomaly
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    rnn_hidden_dims:
+      - [500]
+    dense_hidden_dims:
+      - [500, 500]
+    latent_dim:
+      - 3
+    nf_layers:
+      - 20
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-3
+detector_param_grid:
+  detector_params:
+    num_mc_samples:
+      - 64

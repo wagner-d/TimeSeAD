@@ -1,0 +1,39 @@
+params:
+  training_experiment: generative.gan.train_beatgan
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: SWaTDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    conv_filters:
+      - 32
+    latent_dim:
+      - 50
+  loss_params:
+    adversarial_weight:
+      - 1.0
+  dataset:
+    pipeline:
+      augmentation:
+        args:
+          distort_fraction:
+            - 0.05
+            - 0.1
+          n_augmentations:
+            - 1
+            - 2
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+          - 1.0e-2

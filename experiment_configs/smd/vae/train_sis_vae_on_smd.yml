@@ -1,0 +1,55 @@
+params:
+  training_experiment: generative.vae.train_sis_vae
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    rnn_hidden_dim:
+      - 200
+    latent_dim:
+      - 40
+    x_hidden_dims:
+      - [100]
+    z_hidden_dims:
+      - [100]
+    enc_hidden_dims:
+      - [100]
+    dec_hidden_dims:
+      - [100]
+    prior_hidden_dims:
+      - [100]
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 50
+            - 100
+  training:
+    loss:
+      args:
+        smooth_weight:
+          - 0.5
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+detector_param_grid:
+  detector_params:
+    num_mc_samples:
+      - 64

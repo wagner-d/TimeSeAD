@@ -1,0 +1,58 @@
+version: "3.1"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: sacred
+    volumes:
+      - database:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+  config_generator:
+    image: config_generator
+    build:
+      context: ../..
+      dockerfile: setup/omniboard/config_generator/Dockerfile
+    restart: on-failure
+    command: ["--dbuser", "root", "--dbpassword", "example", "--dbhost", "mongo", "--out_file", "/mnt/config/db_config.json"]
+    depends_on:
+      mongo:
+        condition: service_started
+    volumes:
+      - config:/mnt/config
+
+  omniboard:
+    image: vivekratnavel/omniboard:latest
+#      command: ["--mu", "mongodb://root:example@mongo:27017/sacred?authSource=admin"]
+    ports:
+      - "9000:9000"
+    depends_on:
+      mongo:
+        condition: service_started
+      config_generator:
+        condition: service_completed_successfully
+    environment:
+      OMNIBOARD_CONFIG: /mnt/config/db_config.json
+    volumes:
+      - config:/mnt/config
+
+volumes:
+  database:
+  config:

@@ -1,0 +1,74 @@
+params:
+  training_experiment: baselines.train_pca_ad
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 1
+detector_param_grid:
+  detector_params:
+    n_components:
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 12
+      - 13
+      - 14
+      - 15
+      - 16
+      - 17
+      - 18
+      - 19
+      - 20
+      - 21
+      - 22
+      - 23
+      - 24
+      - 25
+      - 26
+      - 27
+      - 28
+      - 29
+      - 30
+      - 31
+      - 32
+      - 33
+      - 34
+      - 35
+      - 36
+      - 37
+    pca_method:
+      - kernel
+    first_diffs:
+      - True
+      - False
+    cum_method:
+      - mean
+      - max
+    kernel:
+      - poly
+      - rbf
+      - sigmoid
+    gamma:
+      - null
+      - 0.01
+      - 0.1
+      - 1.
+      - 10.

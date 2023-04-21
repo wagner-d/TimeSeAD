@@ -1,0 +1,32 @@
+params:
+  training_experiment: reconstruction.train_untrained_lstm_ae
+  validation_metric: best_ts_f1_score_v2
+  evaluation_metrics:
+    - best_ts_f1_score_v2
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: SWaTDataset
+  training:
+    epochs: 0
+training_param_grid:
+  model_params:
+    hidden_dimensions:
+      - [30]
+      - [40]
+      - [50]
+      - [30, 30]
+      - [50, 50]
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 25
+            - 50
+            - 75
+            - 100

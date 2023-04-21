@@ -1,0 +1,42 @@
+params:
+  training_experiment: prediction.train_tcn_prediction_he
+  validation_metric: best_ts_f1_score_classic
+  evaluation_metrics:
+    - best_ts_f1_score_classic
+#    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+training_param_updates:
+  training:
+#    epochs: 100
+    epochs: 1
+training_param_grid:
+  model_params:
+    filters:
+      - [64, 64, 64, 64, 64]
+    kernel_sizes:
+      - [3, 3, 3, 3, 3]
+      - [5, 5, 5, 5, 5]
+    dilations:
+      - [1, 2, 4, 8, 16]
+    last_n_layers_to_cat:
+      - 3
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 50
+            - 100
+#      prediction:
+#        args:
+#          offset:
+#            - 1
+#  training:
+#    optimizer:
+#      args:
+#        lr:
+#          - 1.0e-4
+#          - 1.0e-3
+#          - 1.0e-2

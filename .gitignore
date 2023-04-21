@@ -1,0 +1,25 @@
+### PyCharm ###
+# User-specific stuff
+.idea/
+
+### VSCode ###
+# User-specific stuff
+.vscode/
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Exclude Experiment logs
+log/
+!log/README.md
+
+# Exclude .env.local
+.env.local
+
+# Library stuff
+*.egg-info
+/docs/source/autoapi/
+/docs/build/

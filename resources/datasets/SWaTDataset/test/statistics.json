@@ -1,0 +1,1 @@
+{"n_features": 51, "n_samples": 1, "total_time_steps": 449919, "n_constant_features_normal": 9, "n_constant_features_anomaly": 8, "total_anomalous_points": 54621, "total_anomalies": 35}

@@ -1,0 +1,48 @@
+dataset:
+  name: WADIDataset
+params:
+  training_experiment: reconstruction.train_usad
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: WADIDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    z_size:
+      - 20
+      - 30
+#      - 40
+      - 50
+      - 60
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 25
+            - 50
+            - 75
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+#          - 1.0e-2
+detector_param_grid:
+  detector_params:
+    alpha:
+      - 0.1
+      - 0.3
+      - 0.5
+      - 0.7
+      - 0.9

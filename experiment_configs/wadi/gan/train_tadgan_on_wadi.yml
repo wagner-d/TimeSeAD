@@ -1,0 +1,69 @@
+dataset:
+  name: WADIDataset
+params:
+  training_experiment: generative.gan.train_tadgan
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: WADIDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    latent_size:
+      - 20
+      - 50
+    enc_lstm_hidden_size:
+      - 100
+    gen_lstm_hidden_size:
+      - 64
+    disc_conv_filters:
+      - 64
+    disc_conv_kernel_size:
+      - 5
+    disc_z_hidden_size:
+      - 20
+      - 50
+    gen_dropout:
+      - 0.2
+    disc_dropout:
+      - 0.25
+    disc_z_dropout:
+      - 0.2
+  loss_params:
+    gradient_penalty:
+      - 10
+    reconstruction_coeff:
+      - 1
+      - 10
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 25  # Minimum
+            - 50
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 0.0005
+          - 0.001
+    trainer:
+      args:
+        disc_iterations:
+          - 5
+detector_param_grid:
+  detector_params:
+    alpha:
+      - 0.1
+      - 0.3
+      - 0.5
+      - 0.7
+      - 0.9

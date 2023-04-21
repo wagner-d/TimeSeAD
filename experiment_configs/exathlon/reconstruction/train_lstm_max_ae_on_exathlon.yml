@@ -1,0 +1,44 @@
+params:
+  training_experiment: reconstruction.train_lstm_max_ae
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: ExathlonDataset
+training_param_updates:
+  dataset:
+    name: ExathlonDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    hidden_dimensions:
+      - [40]
+      - [64]
+      - [64, 64]
+      - [40, 40]
+    latent_pooling:
+      - mean
+      - max
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 25
+            - 50
+            - 75
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+          - 1.0e-2

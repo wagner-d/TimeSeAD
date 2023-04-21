@@ -1,0 +1,50 @@
+params:
+  training_experiment: other.train_lstm_ae_ocsvm
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: SWaTDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    hidden_dimensions:
+      - [128, 64, 32, 16]
+      - [128, 64]
+      - [64, 32]
+      - [32, 16]
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 25
+            - 50
+            - 75
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+          - 1.0e-2
+detector_param_grid:
+  detector_params:
+    kernel:
+      - rbf
+    gamma:
+      - 0.001
+      - 0.01
+      - 0.1
+    nu:
+      - 0.05
+      - 0.1
+      - 0.2
+      - 0.4

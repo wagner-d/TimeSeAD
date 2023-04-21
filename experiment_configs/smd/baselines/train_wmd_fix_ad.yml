@@ -1,0 +1,27 @@
+params:
+  training_experiment: baselines.train_wmd_ad
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 1
+detector_param_grid:
+  detector_params:
+    first_diffs:
+      - False
+    cum_method:
+      - mean
+    feature_index:
+      - null
+    full_cov:
+      - True

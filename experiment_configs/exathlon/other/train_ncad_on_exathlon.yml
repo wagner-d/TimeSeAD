@@ -1,0 +1,56 @@
+params:
+  training_experiment: other.train_ncad
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: ExathlonDataset
+training_param_updates:
+  dataset:
+    name: ExathlonDataset
+  training:
+    epochs: 100
+    batch_size: 32
+    drop_last: True
+training_param_grid:
+  model_params:
+    suspect_window_length:
+      - 1
+    tcn_kernel_size:
+      - 7
+    tcn_layers:
+      - 8
+    tcn_out_channels:
+      - 20
+    tcn_maxpool_out_channels:
+      - 8
+    embedding_rep_dim:
+      - 120
+    normalize_embedding:
+      - True
+#    distance:
+#      - l2_distance
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 50
+            - 100
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-3
+    trainer:
+      args:
+        coe_rate:
+          - 0.3
+          - 1.116
+        mixup_rate:
+          - 0.5

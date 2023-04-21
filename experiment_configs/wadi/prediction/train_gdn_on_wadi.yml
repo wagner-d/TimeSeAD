@@ -1,0 +1,44 @@
+dataset:
+  name: WADIDataset
+params:
+  training_experiment: prediction.train_gdn
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_f1_score
+    - auprc
+training_param_updates:
+  dataset:
+    name: WADIDataset
+  training:
+    epochs: 100
+training_param_grid:
+  model_params:
+    dim:
+      - 32
+      - 64
+    out_layer_hidden_dims:
+      - [64]
+      - [64, 64]
+    topk:
+      - 15
+      - 30
+    dropout_prob:
+      - 0.0
+      - 0.2
+  dataset:
+    pipeline:
+      prediction:
+        args:
+          window_size:
+            - 5
+            - 10
+            - 25
+  training:
+    optimizer:
+      args:
+        lr:
+          - 1.0e-4
+          - 1.0e-3
+#          - 1.0e-2

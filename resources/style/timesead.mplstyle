@@ -1,0 +1,29 @@
+
+# General properties
+figure.dpi        : 300
+figure.figsize    : 5.50107, 3.094351875
+figure.autolayout : True
+
+# Colors and drawing style
+axes.prop_cycle  : cycler('color', ['k', 'r'])
+axes.linewidth   : 1.5
+lines.linewidth  : 2
+lines.linestyle  : -
+lines.marker     : None
+lines.markersize : 0.2
+
+# Text font and size
+font.family      : serif
+font.size        : 9
+axes.titlesize   : 10
+axes.labelsize   : 10
+xtick.labelsize  : 10
+ytick.labelsize  : 10
+legend.fontsize  : 10
+figure.titlesize : 10
+
+# To use LaTex to typeset all text in figures a working LaTex installation is required.
+text.usetex         : True
+mathtext.fontset    : cm
+mathtext.rm         : serif
+text.latex.preamble : \usepackage{amsmath}\usepackage{amssymb}\usepackage{lmodern}
