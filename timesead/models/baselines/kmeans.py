@@ -24,7 +24,7 @@ class KMeansAD(AnomalyDetector):
         self.k = k
         self.window_size = window_size
         self.stride = stride
-        self.model = KMeans(n_init='auto', n_clusters=k)
+        self.model = KMeans(n_clusters=k)
         self.input_shape = input_shape
 
     def _preprocess_data(self, input: torch.tensor) -> torch.tensor:
