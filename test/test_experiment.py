@@ -11,6 +11,7 @@ EXPERIMENTS = [
     'baselines.train_pca_ad',
     'baselines.train_wmd_ad',
     'baselines.train_knn',
+    'baselines.train_kmeans',
     'generative.gan.train_beatgan',
     'generative.gan.train_lstm_vae_gan',
     'generative.gan.train_madgan',

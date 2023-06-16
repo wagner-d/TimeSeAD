@@ -1,0 +1,31 @@
+params:
+  training_experiment: baselines.train_kmeans
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 1
+detector_param_grid:
+  detector_params:
+    k:
+      - 10
+      - 20
+      - 50
+    window_size:
+      - 10
+      - 20
+      - 50
+    stride:
+      - 1
+      - 2
+      - 5
