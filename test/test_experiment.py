@@ -14,6 +14,7 @@ EXPERIMENTS = [
     'baselines.train_kmeans',
     'baselines.train_eif',
     'baselines.train_iforest',
+    'baselines.train_hbos',
     'generative.gan.train_beatgan',
     'generative.gan.train_lstm_vae_gan',
     'generative.gan.train_madgan',
