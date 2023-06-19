@@ -31,7 +31,7 @@ def get_test_pipeline():
     :return: pipeline as a dict. This will be merged with the default dataset pipeline.
     """
     return {
-        'window': {'class': 'WindowTransform', 'args': {'window_size': 12}},
+        'window': {'class': 'WindowTransform', 'args': {'window_size': 50}},
     }
 
 
@@ -60,6 +60,7 @@ def config():
 
     detector_params = dict(
         n_neighbors=5,
+        window_size=12,
     )
 
     train_detector = True

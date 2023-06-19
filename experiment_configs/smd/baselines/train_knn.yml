@@ -21,7 +21,11 @@ detector_param_grid:
       - 5
       - 10
       - 20
-    method:
-      - largest
-      - mean
-      - median
+    window_size:
+      - 10
+      - 20
+      - 50
+    stride:
+      - 1
+      - 2
+      - 5
