@@ -18,7 +18,6 @@ training_param_updates:
 detector_param_grid:
   detector_params:
     n_trees:
-      - 200
       - 350
       - 500
     sample_size:
@@ -26,5 +25,10 @@ detector_param_grid:
       - 512
     extension_level:
       - null
-      - 0
       - 10
+    window_size:
+      - 10
+      - 20
+    stride:
+      - 1
+      - 5

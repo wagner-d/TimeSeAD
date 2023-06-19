@@ -31,7 +31,7 @@ def get_test_pipeline():
     :return: pipeline as a dict. This will be merged with the default dataset pipeline.
     """
     return {
-        'window': {'class': 'WindowTransform', 'args': {'window_size': 12}},
+        'window': {'class': 'WindowTransform', 'args': {'window_size': 50}},
     }
 
 
@@ -61,7 +61,8 @@ def config():
     detector_params = dict(
         n_trees=200,
         sample_size=256,
-        extension_level=None
+        extension_level=None,
+        window_size=12,
     )
 
     train_detector = True
