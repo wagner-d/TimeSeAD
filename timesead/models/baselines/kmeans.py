@@ -1,43 +1,35 @@
-from typing import Optional, Tuple, Union
-
+from typing import Tuple
 import torch
-from sklearn.cluster import KMeans
-from numpy.lib.stride_tricks import sliding_window_view
+from sklearn.cluster import MiniBatchKMeans
 
 from ..common import AnomalyDetector
-from ...data.statistics import get_data_all
 
 class KMeansAD(AnomalyDetector):
-    def __init__(self, k: int, window_size: int, stride: int, input_shape: str = "btf") -> None:
+    def __init__(self, k: int, batch_size: int, input_shape: str = "btf") -> None:
         """
         KMeans Anomaly Detector
-            Compute anomalies using the classical K-Means algorithm.
-            Implementation derived from https://github.com/HPI-Information-Systems/TimeEval-algorithms
+            Compute anomalies using the K-Means algorithm.
+            Anomaly score is computed as distance from the matched cluster center.
 
         Args:
             k[int]: K value for K-Means algorithm
-            window_size[int]: Time frame window size to use for K-Means
-            stride[int]: Stride value for sliding window
+            batch_size[int]: Batch size for the mini batches
         """
         super(KMeansAD, self).__init__()
 
         self.k = k
-        self.window_size = window_size
-        self.stride = stride
-        self.model = KMeans(n_clusters=k)
+        self.batch_size = batch_size
+        self.model = MiniBatchKMeans(n_clusters=k, batch_size=self.batch_size)
         self.input_shape = input_shape
-
-    def _preprocess_data(self, input: torch.tensor) -> torch.tensor:
-        # Converts data to window_size chunks
-        flat_shape = (input.shape[0] - (self.window_size - 1), -1)
-        slides = sliding_window_view(input, window_shape=self.window_size, axis=0).reshape(flat_shape)[::self.stride, :]
-        return torch.from_numpy(slides)
 
 
     def fit(self, dataset: torch.utils.data.DataLoader) -> None:
-        data = self._preprocess_data(get_data_all(dataset.dataset))
-        self.model.fit(data)
-        return self
+        for (b_inputs, b_targets) in dataset:
+            data = b_inputs[0]
+            batch_size, window_size, n_features = data.shape
+            self.window_size = window_size
+            data = data.reshape(batch_size, window_size*n_features)
+            self.model.partial_fit(data)
 
 
     def compute_online_anomaly_score(
@@ -50,8 +42,7 @@ class KMeansAD(AnomalyDetector):
 
         # Get the final window for each batch
         data = batch_input[:, -self.window_size:, :]
-        # Reshape to match sliding_window_view output
-        data = data.permute(0, 2, 1).reshape(data.shape[0], -1)
+        data = data.reshape(data.shape[0], -1)
         clusters = self.model.predict(data)
         diffs = torch.linalg.norm(data - self.model.cluster_centers_[clusters], axis=1)
         return diffs

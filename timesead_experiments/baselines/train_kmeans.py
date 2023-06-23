@@ -3,7 +3,6 @@ import torch
 from timesead_experiments.utils import data_ingredient, load_dataset, training_ingredient, train_model, make_experiment, \
     make_experiment_tempfile, serialization_guard, get_dataloader
 from timesead.models.baselines.kmeans import KMeansAD
-from timesead.data.dataset import collate_fn
 from timesead.utils.utils import Bunch
 
 
@@ -11,35 +10,18 @@ experiment = make_experiment(ingredients=[data_ingredient, training_ingredient])
 
 
 def get_training_pipeline():
-    """
-    This method should return the updates to the pipeline that are specific to this method.
-    Examples include the window size or a reconstruction target.
-
-    This pipeline is used during training.
-
-    :return: pipeline as a dict. This will be merged with the default dataset pipeline.
-    """
-    return { }
+    return {
+        'window': {'class': 'WindowTransform', 'args': {'window_size': 12}}
+    }
 
 
 def get_test_pipeline():
-    """
-    This method should return the updates to the pipeline that are specific to this method.
-    Examples include the window size or a reconstruction target.
-
-    This pipeline is used during testing, for example, by the grid_search experiment.
-
-    :return: pipeline as a dict. This will be merged with the default dataset pipeline.
-    """
     return {
         'window': {'class': 'WindowTransform', 'args': {'window_size': 50}}
     }
 
 
 def get_batch_dim():
-    """
-    This method should return the dimension that should be used to concatenate data points into batches.
-    """
     return 0
 
 
@@ -61,8 +43,6 @@ def config():
 
     detector_params = dict(
         k=20,
-        window_size=12,
-        stride=1
     )
 
     train_detector = True
@@ -72,8 +52,9 @@ def config():
 @experiment.command(unobserved=True)
 @serialization_guard
 def get_datasets():
-    train_ds, val_ds = load_dataset()
-    return get_dataloader(train_ds), get_dataloader(val_ds)
+    # Not training done, so returning None
+    _, val_ds = load_dataset()
+    return None, get_dataloader(val_ds)
 
 
 @experiment.command(unobserved=True)
@@ -85,7 +66,7 @@ def get_anomaly_detector(model, val_loader, detector_params, training, _run, sav
     detector.
     """
     training = Bunch(training)
-    detector = KMeansAD(**detector_params).to(training.device)
+    detector = KMeansAD(batch_size=training['batch_size'], **detector_params).to(training.device)
     detector.fit(val_loader)
 
     if save_detector:

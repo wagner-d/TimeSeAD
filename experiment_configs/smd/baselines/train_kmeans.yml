@@ -15,17 +15,19 @@ training_param_updates:
     name: SMDDataset
   training:
     epochs: 1
+    batch_size: 1024
+training_param_grid:
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 20
+            - 50
 detector_param_grid:
   detector_params:
     k:
       - 10
       - 20
       - 50
-    window_size:
-      - 10
-      - 20
-      - 50
-    stride:
-      - 1
-      - 2
-      - 5
