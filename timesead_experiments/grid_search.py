@@ -20,12 +20,14 @@ from timesead.data.dataset import collate_fn
 from timesead.utils.metadata import LOG_DIRECTORY
 from timesead.utils.utils import Bunch, param_grid_to_list_of_dicts, str2cls
 from timesead.utils.torch_utils import set_threads, clear_gpu_memory
+from timesead.utils.rng_utils import set_seed
 
 
 experiment = make_experiment(ingredients=[data_ingredient])
 
 
-def train_once(config_updates, params):
+def train_once(config_updates, params, seed):
+    set_seed(seed)
     set_threads(params.threads_per_process)
     clear_gpu_memory()
 
@@ -41,8 +43,8 @@ def train_once(config_updates, params):
     return train_id
 
 
-def evaluate_once(train_id, config_updates, detector_param_updates, params, val_ds_params, val_split):
-
+def evaluate_once(train_id, config_updates, detector_param_updates, params, val_ds_params, val_split, seed):
+    set_seed(seed)
     set_threads(params.threads_per_process)
 
     # Train for 0 epochs to get the dataset
@@ -203,9 +205,9 @@ def compute_val_splits(folds: int, val_fold: int, padding: int = 1) -> Tuple[Lis
     return splits, val_fold_index, test_fault_indices
 
 
-def evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context):
+def evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context, seed):
     eval_proc_func = functools.partial(evaluate_once, detector_param_updates=detector_param_grid, params=params,
-                                       val_ds_params=dataset, val_split=val_fold_index)
+                                       val_ds_params=dataset, val_split=val_fold_index, seed=seed)
     with Pool(max_workers=params.exp_processes, mp_context=context) as pool:
         result = pool.map(eval_proc_func, train_ids, updated_param_grid)
 
@@ -302,7 +304,7 @@ def data_config():
 
 @experiment.automain
 @serialization_guard
-def main(params, training_param_grid, training_param_updates, detector_param_grid, dataset, _run):
+def main(params, training_param_grid, training_param_updates, detector_param_grid, dataset, _run, _seed):
 
     params = dict(params)
 
@@ -310,7 +312,7 @@ def main(params, training_param_grid, training_param_updates, detector_param_gri
     params['batch_dim'] = str2cls(f'{params["training_experiment"]}.get_batch_dim')()
     params = Bunch(params)
 
-    # set_seed(seed)
+    set_seed(_seed)
     # run_deterministic()
     # Each worker process gets assigned two threads, so we can use them all in the main evaluation
     set_threads(params.threads_per_process * params.exp_processes)
@@ -338,7 +340,7 @@ def main(params, training_param_grid, training_param_updates, detector_param_gri
     if params.train_ids is None:
 
         # Only train if no information on already finished training runs is provided
-        train_proc_func = functools.partial(train_once, params=params)
+        train_proc_func = functools.partial(train_once, params=params, seed=_seed)
 
         with Pool(max_workers=params.exp_processes, mp_context=context) as pool:
             train_ids = list(pool.map(train_proc_func, updated_param_grid))
@@ -355,7 +357,7 @@ def main(params, training_param_grid, training_param_updates, detector_param_gri
 
         _run.info[f'fold_{val_fold}'] = {}
         best_model, best_params, best_metric, best_scores, best_id, training_experiments, detector_files, all_val_scores = \
-            evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context)
+            evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context, _seed)
 
         print(f'Best validation {params.validation_metric} was:', best_metric)
         print('Best parameters were:', best_params)
@@ -421,7 +423,7 @@ def main(params, training_param_grid, training_param_updates, detector_param_gri
     dataset['split'] = splits
 
     best_model, best_params, best_metric, best_scores, best_id, training_experiments, detector_files, all_val_scores = \
-        evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context)
+        evaluate_all(train_ids, updated_param_grid, detector_param_grid, params, dataset, val_fold_index, context, _seed)
 
     _run.info['final_best_params'] = best_params
     _run.info['final_validation_scores'] = all_val_scores
