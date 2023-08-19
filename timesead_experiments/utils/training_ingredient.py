@@ -12,6 +12,7 @@ from timesead.optim.loss import TorchLossWrapper, Loss
 from timesead.optim.trainer import Trainer, CheckpointHook
 from timesead.utils.torch_utils import run_deterministic, run_fast, ConstantLR
 from timesead.utils.utils import objspec2constructor
+from timesead.utils.rng_utils import set_seed
 
 
 training_ingredient = Ingredient('training')
@@ -78,8 +79,8 @@ def instantiate_loss(loss: Union[str, Loss, Type[Loss], torch.nn.modules.loss._L
 
 @training_ingredient.capture
 def train_model(_run, model, train_ds, val_ds, optimizer, batch_size, batch_dim, num_workers, scheduler, epochs, device,
-                loss, trainer, trainer_hooks, checkpoint_interval, deterministic, drop_last):
-    # set_seed(seed)
+                loss, trainer, trainer_hooks, checkpoint_interval, deterministic, drop_last, _seed):
+    set_seed(_seed)
 
     if deterministic:
         run_deterministic()
