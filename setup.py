@@ -22,9 +22,10 @@ setup(
         'tqdm>=4.59',
         'pandas>=1.2',
         'scikit-learn>=0.24',
-        'torch>=1.9,<2',
-        'torchvision>=0.2',
+        'torch>=1.9.0',
+        'torchvision>=0.2.2',
         'torch-geometric',
+        'pyreadr',
     ],
     extras_require={
         'experiments': [
