@@ -12,8 +12,6 @@ class KNNAD(AnomalyDetector):
         self,
         n_neighbors: int = 5,
         method: str = "largest",
-        window_size: int = 12,
-        stride: int = 1,
         input_shape: str = "btf",
     ) -> None:
         # TODO: Should first diffs be impelemented?
@@ -25,15 +23,11 @@ class KNNAD(AnomalyDetector):
         Args:
             n_neightbors[int]: Number of neighbors for KNN algorithm
             method[str]: How to calculate the score for KNN. One of {'largest', 'mean', 'median'}.
-            window_size[int]: Time frame window size to use for the model
-            stride[int]: Stride value for sliding window
         """
         super(KNNAD, self).__init__()
 
         self.n_neighbors = n_neighbors
         self.method = method
-        self.window_size = window_size
-        self.stride = stride
         self.input_shape = input_shape
 
         self.model = KNN(n_neighbors=self.n_neighbors,
@@ -47,8 +41,17 @@ class KNNAD(AnomalyDetector):
 
 
     def fit(self, dataset: torch.utils.data.DataLoader) -> None:
-        data = self._preprocess_data(get_data_all(dataset.dataset))
-        self.model.fit(data)
+        # Merge all batches as KNN can't do batch processing
+        data_full = []
+        for (b_inputs, b_targets) in dataset:
+            data = b_inputs[0]
+            batch_size, window_size, n_features = data.shape
+            self.window_size = window_size
+            data = data.reshape(batch_size, window_size*n_features)
+            data_full.append(data)
+        data_full = torch.cat(data_full)
+
+        self.model.fit(data_full)
 
 
     def compute_online_anomaly_score(
@@ -59,10 +62,11 @@ class KNNAD(AnomalyDetector):
         if self.input_shape[0] == "t":
             batch_input = batch_input.permute(1, 0, 2)
 
+        if not hasattr(self, 'window_size'):
+            raise RuntimeError('')
         # Get the final window for each batch
         data = batch_input[:, -self.window_size:, :]
-        # Reshape to match sliding_window_view output
-        data = data.permute(0, 2, 1).reshape(data.shape[0], -1)
+        data = data.reshape(data.shape[0], -1)
 
         scores = self.model.decision_function(data)
         scores = torch.tensor(scores)
