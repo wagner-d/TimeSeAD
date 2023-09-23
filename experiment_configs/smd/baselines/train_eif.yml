@@ -16,6 +16,17 @@ training_param_updates:
   training:
     epochs: 1
 detector_param_grid:
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 5
+            - 10
+            - 20
+          step_size:
+            - 1
+            - 5
   detector_params:
     n_trees:
       - 350
@@ -26,9 +37,3 @@ detector_param_grid:
     extension_level:
       - null
       - 10
-    window_size:
-      - 10
-      - 20
-    stride:
-      - 1
-      - 5
