@@ -2,10 +2,8 @@ from typing import Optional, Tuple, Union
 
 import torch
 from pyod.models.knn import KNN
-from numpy.lib.stride_tricks import sliding_window_view
 
 from ..common import AnomalyDetector
-from ...data.statistics import get_data_all
 
 class KNNAD(AnomalyDetector):
     def __init__(
@@ -33,12 +31,6 @@ class KNNAD(AnomalyDetector):
         self.model = KNN(n_neighbors=self.n_neighbors,
                          method=self.method)
 
-    def _preprocess_data(self, input: torch.tensor) -> torch.tensor:
-        # Converts data to window_size chunks
-        flat_shape = (input.shape[0] - (self.window_size - 1), -1)
-        slides = sliding_window_view(input, window_shape=self.window_size, axis=0).reshape(flat_shape)[::self.stride, :]
-        return torch.from_numpy(slides)
-
 
     def fit(self, dataset: torch.utils.data.DataLoader) -> None:
         # Merge all batches as KNN can't do batch processing
@@ -63,7 +55,7 @@ class KNNAD(AnomalyDetector):
             batch_input = batch_input.permute(1, 0, 2)
 
         if not hasattr(self, 'window_size'):
-            raise RuntimeError('')
+            raise RuntimeError('Run "fit" function before trying to compute_anomaly_score')
         # Get the final window for each batch
         data = batch_input[:, -self.window_size:, :]
         data = data.reshape(data.shape[0], -1)
