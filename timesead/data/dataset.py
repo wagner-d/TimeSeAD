@@ -4,7 +4,6 @@ import functools
 from typing import Tuple, Union, Callable, Any, Dict, List
 
 import torch
-from torch._six import string_classes
 from torch.utils.data import Dataset
 from torch.utils.data._utils.collate import np_str_obj_array_pattern, default_collate_err_msg_format
 
@@ -103,7 +102,7 @@ def __default_collate(batch, batch_dim: int = 0):
         return torch.tensor(batch, dtype=torch.float64)
     elif isinstance(elem, int):
         return torch.tensor(batch)
-    elif isinstance(elem, string_classes):
+    elif isinstance(elem, str):
         return batch
     elif isinstance(elem, collections.abc.Mapping):
         return {key: __default_collate([d[key] for d in batch], batch_dim=batch_dim) for key in elem}

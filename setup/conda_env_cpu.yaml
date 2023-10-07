@@ -12,8 +12,8 @@ dependencies:
   - tqdm=4.59.0
   - matplotlib=3.3.4
   - pandas=1.2.4
-  - torchvision=0.2.2
   - pytorch=1.9.0
+  - torchvision=0.10.0
   - cpuonly=1.0
   - openpyxl=3.0.9
   - pymongo=3.12.0
