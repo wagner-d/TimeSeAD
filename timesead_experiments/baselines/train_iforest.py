@@ -10,28 +10,14 @@ experiment = make_experiment(ingredients=[data_ingredient, training_ingredient])
 
 
 def get_training_pipeline():
-    """
-    This method should return the updates to the pipeline that are specific to this method.
-    Examples include the window size or a reconstruction target.
-
-    This pipeline is used during training.
-
-    :return: pipeline as a dict. This will be merged with the default dataset pipeline.
-    """
-    return {}
+    return {
+        'window': {'class': 'WindowTransform', 'args': {'window_size': 12}}
+    }
 
 
 def get_test_pipeline():
-    """
-    This method should return the updates to the pipeline that are specific to this method.
-    Examples include the window size or a reconstruction target.
-
-    This pipeline is used during testing, for example, by the grid_search experiment.
-
-    :return: pipeline as a dict. This will be merged with the default dataset pipeline.
-    """
     return {
-        'window': {'class': 'WindowTransform', 'args': {'window_size': 12}},
+        'window': {'class': 'WindowTransform', 'args': {'window_size': 50}},
     }
 
 
@@ -73,8 +59,8 @@ def config():
 @serialization_guard
 def get_datasets():
 
-    train_ds, val_ds = load_dataset()
-    return get_dataloader(train_ds), get_dataloader(val_ds)
+    _, val_ds = load_dataset()
+    return None, get_dataloader(val_ds)
 
 
 @experiment.command(unobserved=True)

@@ -1,11 +1,9 @@
 from typing import Optional, Tuple, Union
 
 import torch
-import numpy
 from pyod.models.iforest import IForest
 
 from ..common import AnomalyDetector
-from ...data.statistics import get_data_all
 
 class IForestAD(AnomalyDetector):
     def __init__(
@@ -53,22 +51,37 @@ class IForestAD(AnomalyDetector):
 
 
     def fit(self, dataset: torch.utils.data.DataLoader) -> None:
-        data = get_data_all(dataset.dataset)
+        # Merge all batches as batch processing is not possible
+        data_full = []
+        for (b_inputs, b_targets) in dataset:
+            data = b_inputs[0]
+            batch_size, window_size, n_features = data.shape
+            self.window_size = window_size
+            data = data.reshape(batch_size, window_size*n_features)
+            data_full.append(data)
+        data_full = torch.cat(data_full)
 
-        self.model.fit(data)
+        self.model.fit(data_full)
 
 
     def compute_online_anomaly_score(
         self, inputs: Tuple[torch.Tensor, ...]
     ) -> torch.Tensor:
-        # TODO: test for input shape (T, B, D)
-        data = inputs[0]
-        pred_scores = list(map(self.model.decision_function, data))
-        # Converting list of np arrays to a single np array and then converting to tensor is faster
-        # as per pytorch user warning
-        pred_scores = torch.tensor(numpy.array(pred_scores))
+        batch_input = inputs[0]
+        # Convert input to (B, T, D) dimension
+        if self.input_shape[0] == "t":
+            batch_input = batch_input.permute(1, 0, 2)
 
-        return pred_scores[:, -1] if self.input_shape[0] == "b" else pred_scores[-1]
+        if not hasattr(self, 'window_size'):
+            raise RuntimeError('Run "fit" function before trying to compute_anomaly_score')
+        # Get the final window for each batch
+        data = batch_input[:, -self.window_size:, :]
+        data = data.reshape(data.shape[0], -1)
+
+        scores = self.model.decision_function(data)
+        scores = torch.tensor(scores)
+
+        return scores
 
 
     def compute_offline_anomaly_score(
