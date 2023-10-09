@@ -36,6 +36,7 @@ setup(
             'sphinx>=6.1',
             'sphinx-autoapi>=2.1',
             'myst-parser>=1.0',
+            'sphinx-rtd-theme',
         ]
     }
 )

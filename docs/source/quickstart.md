@@ -121,6 +121,23 @@ For each parameter of a method, we can specify a list of values to be used durin
 
 Executing any experiment will create a corresponding directory in `log`, where all results and logs will be stored.
 
+### Sample runs
+
+Sample code to run a grid search on the LSTM-S2S-P experiment on the GPU with a set seed.
+
+```
+python timesead_experiments/grid_search.py with \
+    experiment_configs/exathlon/prediction/train_lstm_prediction_filonov_on_exathlon.yml \
+    "training_param_updates.training.device=cuda" \
+    "seed=123"
+```
+
+To break it down:
+- `with` is the keyword to set configuration variables
+- `experiment_configs/exathlon/prediction/train_lstm_prediction_filonov_on_exathlon.yml` is the YAML file with information on which experiment is being run, which dataset to use, and the parameters for the grid search
+- `"training_param_updates.training.device=cuda"` sets the training to be done in the GPU
+- `"seed=123"` sets the seed value for reproducible runs
+
 ## Plotting
 
 TimeSeAD provides various tools for plotting time series data, which can be found in the {mod}`timesead.plots` package.
