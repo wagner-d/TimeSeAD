@@ -5,10 +5,8 @@ import sys
 import pandas as pd
 from sacred.serializer import restore
 
-sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), os.path.pardir, 'src')))
-sys.path.append(os.path.realpath(os.path.join(os.path.dirname(__file__), os.path.pardir, 'experiments')))
-from experiment_utils import remove_sacred_garbage
-from utils.metadata import LOG_DIRECTORY
+from timesead_experiments.utils.experiment_functions import remove_sacred_garbage
+from timesead.utils.metadata import LOG_DIRECTORY
 
 
 def collect_scores(frame, exp_path, exp_id):
@@ -64,7 +62,10 @@ def main(args):
                 continue
 
             # Collect Information from every experiment
-            collect_scores(frame, grid_search_root, entry)
+            try:
+                collect_scores(frame, grid_search_root, entry)
+            except Exception as ee:
+                print(f'Error processing experiment id {entry}: {ee}')
 
     frame = pd.concat(frame)
 
@@ -85,6 +86,6 @@ if __name__ == '__main__':
     parser.add_argument('--log-dir', type=str, default=LOG_DIRECTORY)
     parser.add_argument('--out-file', type=str, default=os.path.join(LOG_DIRECTORY, 'metrics.csv'))
     parser.add_argument('--experiments', type=str, default=None, nargs='+')
-    parser.add_argument('--folders', type=str, nargs='+', default=['grid_search', 'grid_search2'])
+    parser.add_argument('--folders', type=str, nargs='+', default=['grid_search'])
 
     main(parser.parse_args())
