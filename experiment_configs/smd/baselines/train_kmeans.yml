@@ -22,17 +22,16 @@ training_param_grid:
       window:
         args:
           window_size:
-            - 5
             - 10
-            - 20
             - 50
+            - 100
           step_size:
             - 1
-            - 2
             - 5
+            - 10
 detector_param_grid:
   detector_params:
     k:
       - 10
-      - 20
       - 50
+      - 100
