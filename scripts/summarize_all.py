@@ -1,3 +1,6 @@
+'''
+Script to consolidate json results from summarize_exp output to a single Excel file
+'''
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 import sys
@@ -51,7 +54,7 @@ if __name__ == '__main__':
             data = json.load(ff)
             process_summary_data(wb, measure_tracker_map, experiment, data)
 
-    output_file = 'summary.xlsx'
+    output_file = 'results/summary.xlsx'
     logging.info(f'Writing result to {output_file}')
     wb.save(output_file)
 

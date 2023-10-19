@@ -1,3 +1,11 @@
+'''
+Summarize experiment scores for different seeds and datasets to a single json file. 
+Also checks for varying best parameters in different seeds of the same run.
+
+This expects the logs to be structured as results/<dataset>/<experiment>_<seed>
+'''
+# TODO: Generalize for any log structure 
+
 import os 
 import sys
 import glob
