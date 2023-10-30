@@ -15,7 +15,7 @@ training_param_updates:
     name: SMDDataset
   training:
     epochs: 1
-detector_param_grid:
+training_param_grid:
   dataset:
     pipeline:
       window:
@@ -23,10 +23,10 @@ detector_param_grid:
           window_size:
             - 5
             - 10
-            - 20
           step_size:
             - 1
             - 5
+detector_param_grid:
   detector_params:
     n_trees:
       - 100
@@ -34,11 +34,5 @@ detector_param_grid:
       - 500
     max_samples:
       - null
-      - 0.2
       - 0.5
-    # max_features:
-    #   - 1.
-    #   - 0.8
-    # bootstrap:
-    #   - False
-    #   - True
+
