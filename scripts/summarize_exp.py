@@ -16,6 +16,33 @@ import argparse
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
+def _get_changing_params_impl(changing_params: dict, context: list, param1: object, param2: object):
+    # Recursively check if params are different and update changing_params 
+    if isinstance(param1, dict):
+        for key in param1:
+            new_context = context[:]
+            new_context.append(key)
+            _get_changing_params_impl(changing_params, new_context, param1[key], param2[key])
+    elif param1 != param2:
+        param_str = '.'.join(context)
+        if param_str not in changing_params:
+            changing_params[param_str] = set()
+        changing_params[param_str].add(param1)
+        changing_params[param_str].add(param2)
+
+def get_changing_params(params: list):
+    # Take list of params dict and return dict {<changing_param>: list of values}
+    changing_params = dict()
+    init_param = params[0]
+    for param in params[1:]:
+        for key in param:
+            _get_changing_params_impl(changing_params, [key], init_param[key], param[key])
+    # Change dict of set values to list
+    for key, value in changing_params.items():
+        changing_params[key] = list(value)
+    return changing_params
+
+
 def collect_dataset_results(summary: dict, dataset_dir: str, experiment: str):
     # Read result files for the dataset, experiment and store scores in summary dict
     scores = dict()
@@ -37,8 +64,10 @@ def collect_dataset_results(summary: dict, dataset_dir: str, experiment: str):
             if data['final_best_params'] not in params:
                 params.append(data['final_best_params'])
 
+    changing_params = dict()
     if len(params) > 1:
-        logging.warning(f'More than one best params for {dataset_dir}')
+        changing_params = get_changing_params(params)
+        logging.warning(f'More than one best params for {dataset_dir}, {changing_params}')
 
     summary[dataset_dir] = dict()
     summary_dataset = summary[dataset_dir]
@@ -46,7 +75,7 @@ def collect_dataset_results(summary: dict, dataset_dir: str, experiment: str):
     summary_dataset['scores'] = dict()
     for metric, vals in scores.items():
         summary_dataset['scores'][metric] = (np.mean(vals), np.std(vals))
-    summary_dataset['params'] = params
+    summary_dataset['changing_params'] = changing_params
     logging.debug(f'Done with {dataset_dir}')
 
 
@@ -84,7 +113,7 @@ if __name__ == '__main__':
 
     # Log summary of collected scores
     for dataset_dir, data in summary.items():
-        logging.info(f'\n=== {dataset_dir} ===')
+        logging.debug(f'\n=== {dataset_dir} ===')
         for metric, vals in data['scores'].items():
-            logging.info(f'{metric}: {vals[0]:.2f}\u00B1{vals[1]:.2f}')
+            logging.debug(f'{metric}: {vals[0]:.2f}\u00B1{vals[1]:.2f}')
 

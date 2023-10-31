@@ -46,6 +46,8 @@ def process_summary_data(wb: Workbook, measure_tracker_map: dict, experiment: st
 
 if __name__ == '__main__':
     wb = Workbook()
+    # Delete default sheet
+    del wb['Sheet']
     measure_tracker_map = dict()
     for summary_file in glob.glob('results/*_summary.json'):
         logging.info(f'Parsing {summary_file}')
