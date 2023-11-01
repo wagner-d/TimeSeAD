@@ -3,6 +3,8 @@ Script to consolidate json results from summarize_exp output to a single Excel f
 '''
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.styles import Color
 import sys
 import glob
 import json
@@ -34,6 +36,27 @@ class SheetTracker:
 
         self.sheet.cell(self.exp_row_map[exp], self.dataset_column_map[dataset], value)
 
+    def finalize(self):
+        # Add color grade to cells based on largest to smallest column-wise
+        color_scale = ColorScaleRule(
+            start_type='min',
+            start_color=Color(rgb='FFFF00'),
+            end_type='max',
+            end_color=Color(rgb='00FF00')
+        )
+        for column_no in range(2, len(self.dataset_column_map)+1):
+            last_row = len(self.exp_row_map)
+            column_letter = get_column_letter(column_no)
+            data_range = self.sheet[column_letter+'2':column_letter+str(last_row)]
+            vals = [cell.value if cell.value is not None else 0 for row in data_range for cell in row]
+            min_value = min(vals)
+            max_value = max(vals)
+
+            self.sheet.conditional_formatting.add(
+                column_letter + '2:' + column_letter + str(last_row), 
+                color_scale
+            )
+
         
 def process_summary_data(wb: Workbook, measure_sheet_map: dict, data: dict):
     for measure in data['scores']:
@@ -42,7 +65,8 @@ def process_summary_data(wb: Workbook, measure_sheet_map: dict, data: dict):
         score, variance = data['scores'][measure]
         experiment = data['experiment']
         dataset = data['dataset']
-        measure_sheet_map[measure].add_entry(experiment, dataset, f'{score:.2f}\u00B1{variance:.2f}')
+        # measure_sheet_map[measure].add_entry(experiment, dataset, f'{score:.2f}\u00B1{variance:.2f}')
+        measure_sheet_map[measure].add_entry(experiment, dataset, float(f'{score:.2f}'))
 
 
 if __name__ == '__main__':
@@ -55,6 +79,9 @@ if __name__ == '__main__':
         data = json.load(ff)
         for entry in data:
             process_summary_data(wb, measure_sheet_map, entry)
+
+    for measure, sheet_tracker in measure_sheet_map.items():
+        sheet_tracker.finalize()
 
     output_file = 'results/summary.xlsx'
     logging.info(f'Writing result to {output_file}')

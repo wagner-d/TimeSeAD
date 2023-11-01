@@ -132,7 +132,6 @@ if __name__ == '__main__':
 
     summarize_results(summary)
     json_data = summary_to_json_dict(summary)
-    print(json_data)
 
     with open(args.output_file, 'w') as json_file:
         json.dump(json_data, json_file, indent=2)
