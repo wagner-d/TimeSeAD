@@ -34,27 +34,27 @@ class SheetTracker:
 
         self.sheet.cell(self.exp_row_map[exp], self.dataset_column_map[dataset], value)
 
-
-def process_summary_data(wb: Workbook, measure_tracker_map: dict, experiment: str, data: dict):
-    for dataset in data:
-        for measure in data[dataset]['scores']:
-            if measure not in measure_tracker_map:
-                measure_tracker_map[measure] = SheetTracker(wb, measure)
-            score, var = data[dataset]['scores'][measure]
-            measure_tracker_map[measure].add_entry(experiment, dataset, f'{score:.2f}\u00B1{var:.2f}')
         
+def process_summary_data(wb: Workbook, measure_sheet_map: dict, data: dict):
+    for measure in data['scores']:
+        if measure not in measure_sheet_map:
+            measure_sheet_map[measure] = SheetTracker(wb, measure)
+        score, variance = data['scores'][measure]
+        experiment = data['experiment']
+        dataset = data['dataset']
+        measure_sheet_map[measure].add_entry(experiment, dataset, f'{score:.2f}\u00B1{variance:.2f}')
+
 
 if __name__ == '__main__':
     wb = Workbook()
     # Delete default sheet
     del wb['Sheet']
-    measure_tracker_map = dict()
-    for summary_file in glob.glob('results/*_summary.json'):
-        logging.info(f'Parsing {summary_file}')
-        with open(summary_file) as ff:
-            experiment = summary_file.split('_')[0]
-            data = json.load(ff)
-            process_summary_data(wb, measure_tracker_map, experiment, data)
+    measure_sheet_map = dict()
+
+    with open('results/summary.json') as ff:
+        data = json.load(ff)
+        for entry in data:
+            process_summary_data(wb, measure_sheet_map, entry)
 
     output_file = 'results/summary.xlsx'
     logging.info(f'Writing result to {output_file}')

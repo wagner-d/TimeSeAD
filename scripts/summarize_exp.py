@@ -1,10 +1,7 @@
 '''
 Summarize experiment scores for different seeds and datasets to a single json file. 
 Also checks for varying best parameters in different seeds of the same run.
-
-This expects the logs to be structured as results/<dataset>/<experiment>_<seed>
 '''
-# TODO: Generalize for any log structure 
 
 import os 
 import sys
@@ -14,15 +11,24 @@ import numpy as np
 import logging
 import argparse
 
+from timesead.utils.metadata import LOG_DIRECTORY
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
 def _get_changing_params_impl(changing_params: dict, context: list, param1: object, param2: object):
     # Recursively check if params are different and update changing_params 
+    if isinstance(param1, list):  # Make it hashable if not
+        param1 = tuple(param1)
+        param2 = tuple(param2)
+
     if isinstance(param1, dict):
         for key in param1:
             new_context = context[:]
             new_context.append(key)
-            _get_changing_params_impl(changing_params, new_context, param1[key], param2[key])
+            if not isinstance(param2, dict) or key not in param2:
+                _get_changing_params_impl(changing_params, new_context, param1[key], None)
+            else:
+                _get_changing_params_impl(changing_params, new_context, param1[key], param2[key])
     elif param1 != param2:
         param_str = '.'.join(context)
         if param_str not in changing_params:
@@ -43,77 +49,92 @@ def get_changing_params(params: list):
     return changing_params
 
 
-def collect_dataset_results(summary: dict, dataset_dir: str, experiment: str):
-    # Read result files for the dataset, experiment and store scores in summary dict
-    scores = dict()
-    params = []
-    # For each <exp>_*/info.json in the dataset dirs
-    info_files = glob.glob(os.path.join(args.results_dir, dataset_dir, f'{experiment}_*', 'info.json'))
-    if len(info_files) < 3:
-        logging.warning(f'There should be atleast 3 runs with different seeds. Got only {len(info_files)}')
-    for info_file in info_files:
-        with open(info_file) as ff:
-            logging.debug(f'Parsing {info_file}')
-            data = json.load(ff)
-            # Collect results from "final_scores" entry
-            for metric, val in data['final_scores'].items():
-                if metric not in scores:
-                    scores[metric] = []
-                scores[metric].append(val)
-            # Collect unique best parameters from "final_best_params"
-            if data['final_best_params'] not in params:
-                params.append(data['final_best_params'])
+def collect_results(summary: dict, log_dir: str):
+    # Aggregate information from logs to summary dict per (dataset, experiment)
+    logging.debug(f'Parsing dir {log_dir}')
+    exp_summary = None
 
-    changing_params = dict()
-    if len(params) > 1:
-        changing_params = get_changing_params(params)
-        logging.warning(f'More than one best params for {dataset_dir}, {changing_params}')
+    with open(os.path.join(log_dir, 'config.json')) as ff:
+        data = json.load(ff)
+        dataset = data['dataset']['name'][:-7]  # Remove 'Dataset'
+        if dataset == 'SMD':  # SMD has additional server_id information
+            dataset = f'{dataset}_{data["dataset"]["ds_args"]["server_id"]}'
+        # training_experiment string is of the form module.train_<experiment>
+        experiment = data['params']['training_experiment'].split('train_')[-1] 
 
-    summary[dataset_dir] = dict()
-    summary_dataset = summary[dataset_dir]
-    # Calculate mean, std of the results
-    summary_dataset['scores'] = dict()
-    for metric, vals in scores.items():
-        summary_dataset['scores'][metric] = (np.mean(vals), np.std(vals))
-    summary_dataset['changing_params'] = changing_params
-    logging.debug(f'Done with {dataset_dir}')
+        if (dataset, experiment) not in summary:
+            summary[(dataset, experiment)] = {'seeds': [], 'scores': {}, 'params': []}
+        exp_summary = summary[(dataset, experiment)]
+
+        seed = data['seed']
+        if seed in exp_summary['seeds']:
+            logging.warning(f'Multiple runs with the same seed. Skipping log {log_dir}')
+            return
+        exp_summary['seeds'].append(seed)
+
+    # Scores and parameter information in info.json
+    with open(os.path.join(log_dir, 'info.json')) as ff:
+        data = json.load(ff)
+        scores = exp_summary['scores']
+        for metric, val in data['final_scores'].items():
+            if metric not in scores:
+                scores[metric] = []
+            scores[metric].append(val)
+        params = exp_summary['params']
+        if data['final_best_params'] not in params:
+            params.append(data['final_best_params'])
 
 
+def summarize_results(summary: dict):
+    # Consolidate aggregated scores and params for each dataset experiment
+    for dataset_exp, data in summary.items():
+        logging.debug(f'Summarizing info for {dataset_exp}')
+        scores = dict()
+        for metric, vals in data['scores'].items():
+            scores[metric] = (np.mean(vals), np.std(vals))
+        data['scores'] = scores
+        
+        data['changing_params'] = get_changing_params(data['params'])
+        data['params'] = data['params'][0]
+
+
+def summary_to_json_dict(summary: dict):
+    # Convert the summary dict to a json dump format
+    json_data = []
+    for (dataset, experiment), data in summary.items():
+        entry = {'dataset': dataset, 'experiment': experiment}
+        entry.update(data)
+        json_data.append(entry)
+    return json_data
+        
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('experiment', help='Experiment name to summarize results of', type=str)
-    parser.add_argument('--results_dir', help='The directory holding the results', type=str, default='results')
+    parser.add_argument('--log_dir', help='Glob pattern for log folders', type=str, default=os.path.join(LOG_DIRECTORY, 'grid_search', '*'))
+    parser.add_argument('--output_file', help='JSON output file name', type=str, default='results/summary.json')
     parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    dataset_dirs = []
-    for entry in os.scandir(args.results_dir):
-        if not entry.is_dir():
-            continue
-        dataset_dirs.append(entry.name)
-    logging.debug(f'Found datasets: {dataset_dirs}')
+    log_dirs = glob.glob(args.log_dir)
+    log_dirs.sort(key=os.path.getmtime, reverse=True)  # Start with latest logs
+    logging.debug(f'Found logs: {log_dirs}')
 
-    # summary  dataset_dir:{scores, params}
+    # Summary  (dataset, experiment): {scores: [], seeds: [], params: []}
     summary = dict()
-    for dataset_dir in dataset_dirs:
-        try: 
-            collect_dataset_results(summary, dataset_dir, args.experiment)
+    for log_dir in log_dirs:
+        try:
+            collect_results(summary, log_dir)
         except Exception as ee:
-            logging.error(f'Error processing results for {args.experiment} in {dataset_dir}: {ee}')
-        
-    # Write the dict as json to <exp>_summary.json
-    results_file = os.path.join(args.results_dir, f'{args.experiment}_summary.json')
-    with open(results_file, 'w') as summary_file:
-        json.dump(summary, summary_file, indent=2)
-    logging.info(f'Wrote summary to {results_file}')
+            logging.error(f'Error processing results in log {log_dir}: {ee}')
 
-    # Log summary of collected scores
-    for dataset_dir, data in summary.items():
-        logging.debug(f'\n=== {dataset_dir} ===')
-        for metric, vals in data['scores'].items():
-            logging.debug(f'{metric}: {vals[0]:.2f}\u00B1{vals[1]:.2f}')
+    summarize_results(summary)
+    json_data = summary_to_json_dict(summary)
+    print(json_data)
+
+    with open(args.output_file, 'w') as json_file:
+        json.dump(json_data, json_file, indent=2)
+    logging.info(f'Wrote summary to {args.output_file}')
 
