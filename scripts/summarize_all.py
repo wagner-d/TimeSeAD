@@ -9,6 +9,7 @@ import sys
 import glob
 import json
 import logging
+import pandas as pd
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
@@ -66,7 +67,17 @@ def process_summary_data(wb: Workbook, measure_sheet_map: dict, data: dict):
         experiment = data['experiment']
         dataset = data['dataset']
         # measure_sheet_map[measure].add_entry(experiment, dataset, f'{score:.2f}\u00B1{variance:.2f}')
-        measure_sheet_map[measure].add_entry(experiment, dataset, float(f'{score:.2f}'))
+        measure_sheet_map[measure].add_entry(experiment, dataset, float(f'{score:.3f}')*100)
+
+
+def add_template_data(measure_sheet_map: dict, template_path: str):
+    df = pd.read_csv(template_path)
+    datasets = [col for col in df if col not in ['measure', 'experiment']]
+    for _, row in df.iterrows():
+        sheet_tracker = measure_sheet_map[row['measure']]
+        experiment = row['experiment']
+        for dataset in datasets:
+            sheet_tracker.add_entry(experiment, dataset, row[dataset])
 
 
 if __name__ == '__main__':
@@ -79,6 +90,8 @@ if __name__ == '__main__':
         data = json.load(ff)
         for entry in data:
             process_summary_data(wb, measure_sheet_map, entry)
+
+    add_template_data(measure_sheet_map, 'smd_template.csv')
 
     for measure, sheet_tracker in measure_sheet_map.items():
         sheet_tracker.finalize()
