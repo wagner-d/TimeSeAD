@@ -1,10 +1,10 @@
 '''
 Script to consolidate json results from summarize_exp output to a single Excel file
 '''
+import openpyxl
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.formatting.rule import ColorScaleRule
-from openpyxl.styles import Color
+from openpyxl.styles import Color, PatternFill
 import sys
 import glob
 import json
@@ -37,28 +37,70 @@ class SheetTracker:
 
         self.sheet.cell(self.exp_row_map[exp], self.dataset_column_map[dataset], value)
 
-    def finalize(self):
-        # Add color grade to cells based on largest to smallest column-wise
-        color_scale = ColorScaleRule(
-            start_type='min',
-            start_color=Color(rgb='FFFF00'),
-            end_type='max',
-            end_color=Color(rgb='00FF00')
+
+    def _add_average_column(self):
+        # Add column for average value
+        num_rows = len(self.exp_row_map)
+        # Setup new AVG column
+        self.add_entry('header', 'AVG Val', 'AVG Val')
+        avg_column_number = self.dataset_column_map['AVG Val']
+        last_column_letter = get_column_letter(avg_column_number - 1)
+        for row_ind in range(2, num_rows+1):
+            data_range = self.sheet['B'+str(row_ind):last_column_letter+str(row_ind)]
+            vals = [cell.value for row in data_range for cell in row if cell.value is not None]
+            average_val = sum(vals) / len(vals)
+            self.sheet.cell(row_ind, avg_column_number, float(f'{average_val:.1f}'))
+
+
+    def _get_graded_color(self, index: int, start_color: [int], color_step: [float]):
+        # Calculate and return cell fill based on start color, color step, and rank index
+        fill_color = Color(rgb=f'{int(start_color[0] + index*color_step[0]):02X}'
+            f'{int(start_color[1] + index*color_step[1]):02X}'
+            f'{int(start_color[2] + index*color_step[2]):02X}'
         )
-        for column_no in range(2, len(self.dataset_column_map)+1):
-            last_row = len(self.exp_row_map)
-            column_letter = get_column_letter(column_no)
-            data_range = self.sheet[column_letter+'2':column_letter+str(last_row)]
-            vals = [cell.value if cell.value is not None else 0 for row in data_range for cell in row]
-            min_value = min(vals)
-            max_value = max(vals)
+        return PatternFill(start_color=fill_color, end_color=fill_color, fill_type='solid')
 
-            self.sheet.conditional_formatting.add(
-                column_letter + '2:' + column_letter + str(last_row), 
-                color_scale
-            )
 
-        
+    def _add_rank_info_to_cells(self):
+        # Add rank of the cell in brackets column-wise and a column for average rank
+        # Highest value in a column is boldened
+        num_rows = len(self.exp_row_map)
+        row_ranks_map = {row: [] for row in range(2, num_rows+1)}
+        start_color = (0, 255, 0)
+        end_color = (255, 255, 0)
+        color_step = [(end - start) / num_rows for start, end in zip(start_color, end_color)]
+
+        for column_ind in range(2, len(self.dataset_column_map)+1):
+            column_letter = get_column_letter(column_ind)
+            data_range = self.sheet[column_letter+'2':column_letter+str(num_rows)]
+            # data_range is 2D, make it a list
+            cells = [row[0] for row in data_range if row[0].value is not None]
+            sorted_cells = sorted(cells, key=lambda cell: cell.value, reverse=True)
+
+            sorted_cells[0].font = openpyxl.styles.Font(bold=True)
+            for ind, cell in enumerate(sorted_cells):
+                cell.value = f'{cell.value:2.2f} ({ind+1})'
+                row_ranks_map[cell.row].append(ind+1)
+                cell.fill = self._get_graded_color(ind, start_color, color_step)
+
+        # Setup avg rank column
+        self.add_entry('header', 'AVG Rank', 'AVG Rank')
+        avg_rank_column = self.dataset_column_map['AVG Rank']
+        row_avg_ranks = [(row_ind, sum(ranks)/len(ranks)) for row_ind, ranks in row_ranks_map.items()]
+        sorted_row_avg_ranks = sorted(row_avg_ranks, key=lambda val: val[1])
+
+        top_rank_cell = self.sheet.cell(sorted_row_avg_ranks[0][0], avg_rank_column)
+        top_rank_cell.font = openpyxl.styles.Font(bold=True)
+        for ind, (row_ind, avg_rank) in enumerate(sorted_row_avg_ranks):
+            cell = self.sheet.cell(row_ind, avg_rank_column, f'{avg_rank:.2f} ({ind+1})')
+            cell.fill = self._get_graded_color(ind, start_color, color_step)
+
+
+    def finalize(self):
+        self._add_average_column()
+        self._add_rank_info_to_cells()
+
+
 def process_summary_data(wb: Workbook, measure_sheet_map: dict, data: dict):
     for measure in data['scores']:
         if measure not in measure_sheet_map:
