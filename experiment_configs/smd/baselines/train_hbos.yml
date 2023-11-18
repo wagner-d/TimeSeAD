@@ -22,7 +22,6 @@ training_param_grid:
         args:
           window_size:
             - 10
-            - 20
             - 50
             - 100
           step_size:
@@ -32,8 +31,8 @@ detector_param_grid:
   detector_params:
     n_bins:
       - 10
-      - 50
       - 100
+      - 200
     alpha:
       - 0.1
       - 0.2
