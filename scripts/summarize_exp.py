@@ -51,7 +51,7 @@ def get_changing_params(params: list):
 
 def collect_results(summary: dict, log_dir: str):
     # Aggregate information from logs to summary dict per (dataset, experiment)
-    logging.debug(f'Parsing dir {log_dir}')
+    logging.info(f'Parsing dir {log_dir}')
     exp_summary = None
 
     with open(os.path.join(log_dir, 'config.json')) as ff:

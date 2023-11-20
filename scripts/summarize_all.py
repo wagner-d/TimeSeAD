@@ -1,15 +1,17 @@
 '''
-Script to consolidate json results from summarize_exp output to a single Excel file
+Script to consolidate json results from log summarizer output to a single Excel file
 '''
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Color, PatternFill
+import os
 import sys
 import glob
 import json
 import logging
 import pandas as pd
+import argparse
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
@@ -123,22 +125,34 @@ def add_template_data(measure_sheet_map: dict, template_path: str):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input_file', help='Path to input json file', type=str, default=os.path.join('results', 'summary.json'))
+    parser.add_argument('-o', '--output_file', help='Path to output excel file', type=str, default=os.path.join('results', 'summary.xlsx'))
+    parser.add_argument('-t', '--template_file', action='append', help='Add csv file with additional info to add on')
+    parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     wb = Workbook()
     # Delete default sheet
     del wb['Sheet']
     measure_sheet_map = dict()
 
-    with open('results/summary.json') as ff:
+    with open(args.input_file) as ff:
+        logging.info(f'Processing data from file {args.input_file}')
         data = json.load(ff)
         for entry in data:
             process_summary_data(wb, measure_sheet_map, entry)
 
-    add_template_data(measure_sheet_map, 'smd_template.csv')
+    for template_file in args.template_file:
+        logging.info(f'Adding additional info from {template_file}')
+        add_template_data(measure_sheet_map, 'smd_template.csv')
 
     for measure, sheet_tracker in measure_sheet_map.items():
         sheet_tracker.finalize()
 
-    output_file = 'results/summary.xlsx'
-    logging.info(f'Writing result to {output_file}')
-    wb.save(output_file)
+    logging.info(f'Writing result to {args.output_file}')
+    wb.save(args.output_file)
 
