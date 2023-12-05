@@ -128,7 +128,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input_file', help='Path to input json file', type=str, default=os.path.join('results', 'summary.json'))
     parser.add_argument('-o', '--output_file', help='Path to output excel file', type=str, default=os.path.join('results', 'summary.xlsx'))
-    parser.add_argument('-t', '--template_file', action='append', help='Add csv file with additional info to add on')
+    parser.add_argument('-t', '--template_file', help='Add csv file with additional info to add on', action='append')
     parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
     args = parser.parse_args()
 
@@ -146,7 +146,8 @@ if __name__ == '__main__':
         for entry in data:
             process_summary_data(wb, measure_sheet_map, entry)
 
-    for template_file in args.template_file:
+    template_files = args.template_file if args.template_file else []
+    for template_file in template_files:
         logging.info(f'Adding additional info from {template_file}')
         add_template_data(measure_sheet_map, 'smd_template.csv')
 
