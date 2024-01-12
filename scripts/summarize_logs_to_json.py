@@ -13,7 +13,6 @@ import argparse
 
 from timesead.utils.metadata import LOG_DIRECTORY
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
 def _get_changing_params_impl(changing_params: dict, context: list, param1: object, param2: object):
     # Recursively check if params are different and update changing_params 
@@ -57,8 +56,11 @@ def collect_results(summary: dict, log_dir: str):
     with open(os.path.join(log_dir, 'config.json')) as ff:
         data = json.load(ff)
         dataset = data['dataset']['name'][:-7]  # Remove 'Dataset'
-        if dataset == 'SMD':  # SMD has additional server_id information
+        # Get the additional dataset specific information 
+        if dataset == 'SMD':  
             dataset = f'{dataset}_{data["dataset"]["ds_args"]["server_id"]}'
+        elif dataset == 'Exathlon':  
+            dataset = f'{dataset}_{data["dataset"]["ds_args"]["app_id"]}'
         # training_experiment string is of the form module.train_<experiment>
         experiment = data['params']['training_experiment'].split('train_')[-1] 
 
@@ -115,6 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
     args = parser.parse_args()
 
+    logging.getLogger().setLevel(logging.INFO)
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 

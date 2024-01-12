@@ -13,7 +13,6 @@ import logging
 import pandas as pd
 import argparse
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
 
 class SheetTracker:
     CHAR_WIDTH = 2
@@ -132,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', help='Increase output verbosity', action='store_true')
     args = parser.parse_args()
 
+    logging.getLogger().setLevel(logging.INFO)
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     template_files = args.template_file if args.template_file else []
     for template_file in template_files:
         logging.info(f'Adding additional info from {template_file}')
-        add_template_data(measure_sheet_map, 'smd_template.csv')
+        add_template_data(measure_sheet_map, template_file)
 
     for measure, sheet_tracker in measure_sheet_map.items():
         sheet_tracker.finalize()
