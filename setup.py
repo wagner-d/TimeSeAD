@@ -26,6 +26,8 @@ setup(
         'torchvision>=0.2.2',
         'torch-geometric',
         'pyreadr',
+        'pyod',
+        'eif',
     ],
     extras_require={
         'experiments': [

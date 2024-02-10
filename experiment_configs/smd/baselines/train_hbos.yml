@@ -1,0 +1,43 @@
+params:
+  training_experiment: baselines.train_hbos
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 1
+training_param_grid:
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 10
+            - 50
+            - 100
+          step_size:
+            - 1
+            - 5
+detector_param_grid:
+  detector_params:
+    n_bins:
+      - 10
+      - 100
+      - 200
+    alpha:
+      - 0.1
+      - 0.2
+      - 0.5
+    bin_tol:
+      - 0.3
+      - 0.5
+      - 0.8

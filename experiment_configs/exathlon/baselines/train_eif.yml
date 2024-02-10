@@ -1,0 +1,39 @@
+params:
+  training_experiment: baselines.train_eif
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: ExathlonDataset
+training_param_updates:
+  dataset:
+    name: ExathlonDataset
+  training:
+    epochs: 1
+training_param_grid:
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 5
+            - 10
+          step_size:
+            - 1
+            - 5
+detector_param_grid:
+  detector_params:
+    n_trees:
+      - 100
+      - 200
+      - 500
+    sample_size:
+      - 256
+    extension_level:
+      - null
+
