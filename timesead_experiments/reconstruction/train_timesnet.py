@@ -86,7 +86,7 @@ def config():
 @serialization_guard
 def get_datasets():
 
-    train_ds, val_ds = load_dataset().object
+    train_ds, val_ds = load_dataset()
 
     return get_dataloader(train_ds), get_dataloader(val_ds)
 

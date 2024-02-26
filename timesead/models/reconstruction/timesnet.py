@@ -129,5 +129,5 @@ class TimesNet(BaseModel):
         dec_out = dec_out + \
                   (means[:, 0, :].unsqueeze(1).repeat(
                       1, self.seq_len, 1))
-        return (dec_out, )
+        return dec_out
 
