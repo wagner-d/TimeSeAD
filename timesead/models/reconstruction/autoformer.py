@@ -7,7 +7,7 @@ import torch.nn as nn
 from ...models import BaseModel
 from ..layers import DataEmbedding
 from ..layers import AutoCorrelation, AutoCorrelationLayer
-from ..layers import Encoder, EncoderLayer, CustomLayerNorm, SeriesDecomp
+from ..layers.autoformer_encdec import Encoder, EncoderLayer, CustomLayerNorm, SeriesDecomp
 
 
 class Autoformer(BaseModel):

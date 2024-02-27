@@ -1,0 +1,42 @@
+params:
+  training_experiment: reconstruction.train_autoformer
+  validation_metric: best_ts_f1_score
+  evaluation_metrics:
+    - best_ts_f1_score
+    - ts_auprc
+    - best_ts_f1_score_classic
+    - ts_auprc_unweighted
+    - best_f1_score
+    - auprc
+dataset:
+  name: SMDDataset
+training_param_updates:
+  dataset:
+    name: SMDDataset
+  training:
+    epochs: 10
+training_param_grid:
+  model_params:
+    moving_avg:
+      - 25
+    model_dim:
+      - 64
+      - 128
+    dropout:
+      - 0.1
+    attention_factor:
+      - 1
+    num_heads:
+      - 8
+    fcn_dim:
+      - 128
+    activation:
+      - gelu
+    encoder_layers:
+      - 3
+  dataset:
+    pipeline:
+      window:
+        args:
+          window_size:
+            - 100
