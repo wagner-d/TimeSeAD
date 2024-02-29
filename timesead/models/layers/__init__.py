@@ -7,3 +7,5 @@ from .anom_attention import AnomalyAttention, AttentionLayer
 from .embed import DataEmbedding
 from .conv_block import ConvBlock
 from .autocorrelation import AutoCorrelationLayer, AutoCorrelation
+from .fourier_correlation import FourierBlock, FourierCrossAttention
+from .multi_wavelet_correlation import MultiWaveletCross, MultiWaveletTransform

@@ -5,3 +5,4 @@ from .usad import USADModel, BasicAE, USADDecoder1Loss, USADDecoder2Loss, USADAn
 from .anom_trans import AnomalyTransformer, AnomTransf_Loss, AnomTransf_Trainer, AnomTransf_AnomalyDetector
 from .timesnet import TimesNet
 from .autoformer import Autoformer
+from .fedformer import FEDformer
