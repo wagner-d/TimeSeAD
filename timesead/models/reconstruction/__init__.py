@@ -6,3 +6,4 @@ from .anom_trans import AnomalyTransformer, AnomTransf_Loss, AnomTransf_Trainer,
 from .timesnet import TimesNet
 from .autoformer import Autoformer
 from .fedformer import FEDformer
+from .etsformer import ETSformer
