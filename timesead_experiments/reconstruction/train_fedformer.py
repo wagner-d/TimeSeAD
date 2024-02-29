@@ -22,6 +22,7 @@ def get_training_pipeline():
     """
     return {
         'window': {'class': 'WindowTransform', 'args': {'window_size': 100}},
+        'reconstruction': {'class': 'ReconstructionTargetTransform', 'args': {'replace_labels': True}}
     }
 
 

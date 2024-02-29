@@ -77,7 +77,7 @@ class FEDformer(BaseModel):
 
     def forward(self, inputs: Tuple[torch.Tensor, ...]) -> Tuple[torch.Tensor, ...]:
         x_enc = inputs[0]
-        enc_out = self.enc_embedding(x_enc, None)
+        enc_out = self.enc_embedding(x_enc)
         enc_out, attns = self.encoder(enc_out, attn_mask=None)
 
         dec_out = self.projection(enc_out)

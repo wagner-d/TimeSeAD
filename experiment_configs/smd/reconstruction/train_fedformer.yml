@@ -1,5 +1,5 @@
 params:
-  training_experiment: reconstruction.train_autoformer
+  training_experiment: reconstruction.train_fedformer
   validation_metric: best_ts_f1_score
   evaluation_metrics:
     - best_ts_f1_score
