@@ -14,7 +14,7 @@ training_param_updates:
   dataset:
     name: SMDDataset
   training:
-    epochs: 10
+    epochs: 100
 training_param_grid:
   model_params:
     moving_avg:
@@ -23,12 +23,14 @@ training_param_grid:
       - 64
       - 128
     dropout:
+      - 0.0
       - 0.1
     attention_factor:
       - 1
     num_heads:
       - 8
     fcn_dim:
+      - 64
       - 128
     activation:
       - gelu
@@ -39,4 +41,8 @@ training_param_grid:
       window:
         args:
           window_size:
+            - 10
+            - 50
             - 100
+            - 200
+
