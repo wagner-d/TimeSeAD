@@ -44,6 +44,10 @@ EXPERIMENTS = [
     'reconstruction.train_tcn_ae',
     'reconstruction.train_untrained_lstm_ae',
     'reconstruction.train_usad',
+    'reconstruction.train_timesnet',
+    'reconstruction.train_autoformer',
+    'reconstruction.train_fedformer',
+    'reconstruction.train_etsformer',
 ]
 
 TIMES_TAKEN = {}
