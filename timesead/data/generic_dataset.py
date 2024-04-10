@@ -22,7 +22,7 @@ class GenericDataset(BaseTSDataset):
 
     def __init__(self, path: str, name: Optional[str]=None, separator: str=';',
                  training: bool=True, standardize: Union[bool, Callable]=True,
-                 preprocess: bool=True):
+                 preprocess: bool=True, overwrite: bool=False):
         """
         :param path: Path to the dataset
         :param name: Name of the specific dataset file to be used.
@@ -32,6 +32,7 @@ class GenericDataset(BaseTSDataset):
             If it is a callable, it is used to standardize the data.
             If it is a boolean, it indicates whether the data should be standardized.
         :param preprocess: Whether to setup the dataset for experiments.
+        :param overwrite: Whether to overwrite existing files.
         """
 
         self.path = path
@@ -39,14 +40,23 @@ class GenericDataset(BaseTSDataset):
         self.training = training
         self.standardize = standardize
         self.preprocess = preprocess
+        self.separator = separator
+        self.overwrite = overwrite
 
-        dataset_name = name if name is not None else 'combined'
         test_str = 'train' if self.training else 'test'
-        self.dataset_path = os.path.join(self.processed_dir, f'{test_str}_{dataset_name}.csv')
+        if name is None:
+            self.combined = True
+            dataset_name = 'combined'
+            dataset_dir = self.processed_dir
+        else:
+            self.combined = False
+            dataset_name = name
+            dataset_dir = os.path.join(self.path, test_str)
+        self.dataset_path = os.path.join(dataset_dir, f'{dataset_name}.csv')
         self.stats_file = os.path.join(self.processed_dir, f'{test_str}_{dataset_name}_stats.npz')
 
         # TODO(AR): have an additional file that indicates which files were combined
-        self._setup_dataset(name, separator)
+        self._setup_dataset()
 
         self.inputs  = None
         self.targets = None
@@ -63,27 +73,37 @@ class GenericDataset(BaseTSDataset):
             self.standardize_fn = None
 
 
-    def _setup_dataset(self, name: str, separator: str) -> None:
+    def _setup_dataset(self) -> None:
         if os.path.exists(self.dataset_path) and os.path.exists(self.stats_file):
-            data = np.genfromtxt(self.dataset_path, delimiter=',', dtype=np.float32)
-            data = pd.DataFrame(data)
+            data = self._read_dataset()
         else:
-            data = self._generate_dataset_files(name, separator)
+            data = self._generate_dataset_files()
 
         self._seq_len = data.shape[0]
         self.features = list(data.items())
         self._num_features = len(self.features)
 
 
-    def _generate_dataset_files(self, name: Optional[str], separator: str) -> pd.DataFrame:
+    def _read_dataset(self) -> pd.DataFrame:
+        skip_header = 0 if self.combined else 1
+        data = np.genfromtxt(self.dataset_path, delimiter=self.separator,
+                             dtype=np.float32, skip_header=skip_header)
+        data = pd.DataFrame(data)
+        return data
+
+
+    def _generate_dataset_files(self) -> pd.DataFrame:
         os.makedirs(self.processed_dir, exist_ok=True)
         data = None
-        if name is not None:
-            raise NotImplementedError("Loading a specific dataset file is not implemented yet.")
+        if not self.combined:
+            if not os.path.exists(self.dataset_path):
+                raise FileNotFoundError(f"Dataset file {self.dataset_path} does not exist.")
+            raw_data = self._read_dataset()
+            data = self._read_dataset()
         else:
             test_str = 'train' if self.training else 'test'
             for csv_file in glob.glob(os.path.join(self.path, test_str, '*.csv')):
-                part_data = pd.read_csv(csv_file, sep=separator)
+                part_data = pd.read_csv(csv_file, sep=self.separator)
                 if data is None:
                     data = part_data
                 else:
@@ -94,14 +114,17 @@ class GenericDataset(BaseTSDataset):
         if nan_columns:
             _logger.warning(f"Columns with NaN values: {nan_columns}. Dropping them.")
             data = data.dropna(axis=1, how='all')
+            if not self.combined and not self.overwrite:
+                raise ValueError("NaN or non-float values found in dataset. Please preprocess the dataset first. Or set overwrite=True.")
 
-        data.to_csv(self.dataset_path, index=False, header=False, sep=',')
+        if self.combined or self.overwrite:
+            data.to_csv(self.dataset_path, index=False, header=False, sep=self.separator)
         save_statistics(data, self.stats_file)
         return data
 
 
     def load_data(self) -> Tuple[np.ndarray, np.ndarray]:
-        data = np.genfromtxt(self.dataset_path, delimiter=',', dtype=np.float32)
+        data = np.genfromtxt(self.dataset_path, delimiter=self.separator, dtype=np.float32)
         if self.training:
             target = np.zeros(data.shape[0])
         else:
