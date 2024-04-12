@@ -70,9 +70,10 @@ def config():
 @experiment.command(unobserved=True)
 @serialization_guard
 def get_datasets():
-    train_ds, val_ds = load_dataset()
+    # Validation dataset is not used in this experiment
+    train_ds, _ = load_dataset()
 
-    return get_dataloader(train_ds), get_dataloader(val_ds)
+    return get_dataloader(train_ds), None
 
 @experiment.command(unobserved=True)
 @serialization_guard('model', 'val_loader')
