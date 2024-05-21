@@ -9,10 +9,10 @@ params:
     - best_f1_score
     - auprc
 dataset:
-  name: SMDDataset
+  name: ExathlonDataset
 training_param_updates:
   dataset:
-    name: SMDDataset
+    name: ExathlonDataset
   training:
     epochs: 10
 training_param_grid:
