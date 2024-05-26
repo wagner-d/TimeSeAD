@@ -27,7 +27,7 @@ setup(
         'torch-geometric',
         'pyreadr',
         'pyod',
-        'eif',
+        'eif==1.0.2',
     ],
     extras_require={
         'experiments': [
