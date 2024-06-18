@@ -1,9 +1,8 @@
 from typing import List
+import os
+
 from .generic_dataset import GenericDataset
-
-import logging
-
-_logger = logging.getLogger(__name__)
+from timesead.utils.metadata import DATA_DIRECTORY
 
 class ChemDataset(GenericDataset):
     """
@@ -27,7 +26,8 @@ class ChemDataset(GenericDataset):
         "x apparatus mass / component 2 / [kg/kg]"
     ]
 
-    def __init__(self, path: str, training: bool=True, standardize: bool=True,
+    def __init__(self, path: str=os.path.join(DATA_DIRECTORY, 'chem'),
+                 training: bool=True, standardize: bool=True,
                  preprocess: bool=True, overwrite: bool=False):
         """
         :param path: Path to the dataset
