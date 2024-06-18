@@ -9,7 +9,6 @@ import torch
 
 from timesead.data.dataset import BaseTSDataset
 from timesead.data.preprocessing import minmax_scaler
-from timesead.utils.metadata import DATA_DIRECTORY
 from .preprocessing import save_statistics
 
 _logger = logging.getLogger(__name__)
@@ -17,16 +16,22 @@ _logger = logging.getLogger(__name__)
 
 class GenericDataset(BaseTSDataset):
     """
-
+    Generic dataset class to load csv files as datasets.
+    The data for training should be in a train/ folder and test data in a test/ folder.
+    All csv files in the respective folders are used as part of the dataset.
     """
 
     def __init__(self, path: str, name: Optional[str]=None, separator: str=';',
+                 features: Optional[List[str]]=None, anomaly_feature: Optional[str]=None,
                  training: bool=True, standardize: Union[bool, Callable]=True,
                  preprocess: bool=True, overwrite: bool=False):
         """
         :param path: Path to the dataset
         :param name: Name of the specific dataset file to be used.
-            If not specified, the dataset files are combined.
+            If not specified, all csv files are used.
+        :param separator: Separator used in the dataset file
+        :param features: List of features to be used in the dataset.
+        :param anomaly_feature: Name of the feature that indicates anomalies.
         :param training: Whether to load the training or test data
         :param standardize: Can be either a boolean or a callable.
             If it is a callable, it is used to standardize the data.
@@ -42,116 +47,109 @@ class GenericDataset(BaseTSDataset):
         self.preprocess = preprocess
         self.separator = separator
         self.overwrite = overwrite
+        self.features = features
+        self.anomaly_feature = anomaly_feature
 
         test_str = 'train' if self.training else 'test'
+        dataset_dir = os.path.join(self.path, test_str)
         if name is None:
-            self.combined = True
-            dataset_name = 'combined'
-            dataset_dir = self.processed_dir
+            self.dataset_paths = glob.glob(os.path.join(dataset_dir, '*.csv'))
+            self.stats_files = [os.path.join(self.processed_dir, f'{test_str}_{os.path.basename(f)}_stats.npz') for f in self.dataset_paths]
         else:
-            self.combined = False
-            dataset_name = name
-            dataset_dir = os.path.join(self.path, test_str)
-        self.dataset_path = os.path.join(dataset_dir, f'{dataset_name}.csv')
-        self.stats_file = os.path.join(self.processed_dir, f'{test_str}_{dataset_name}_stats.npz')
+            self.dataset_paths = [os.path.join(dataset_dir, f'{name}.csv')]
+            self.stats_files = [os.path.join(self.processed_dir, f'{test_str}_{name}_stats.npz')]
 
-        # TODO(AR): have an additional file that indicates which files were combined
         self._setup_dataset()
 
-        self.inputs  = None
-        self.targets = None
-
+        self.standardize_fns = []
         if callable(standardize):
-            with np.load(self.stats_file) as d:
-                stats = dict(d)
-            self.standardize_fn = functools.partial(standardize, stats=stats)
+            for stats_file in self.stats_files:
+                with np.load(stats_file) as d:
+                    stats = dict(d)
+                standardize_fn = functools.partial(standardize, stats=stats)
+                self.standardize_fns.append(standardize_fn)
         elif standardize:
-            with np.load(self.stats_file) as d:
-                stats = dict(d)
-            self.standardize_fn = functools.partial(minmax_scaler, stats=stats)
+            for stats_file in self.stats_files:
+                with np.load(stats_file) as d:
+                    stats = dict(d)
+                standardize_fn = functools.partial(minmax_scaler, stats=stats)
+                self.standardize_fns.append(standardize_fn)
         else:
-            self.standardize_fn = None
+            standardize_fn = [None] * len(self.stats_files)
 
 
     def _setup_dataset(self) -> None:
-        if os.path.exists(self.dataset_path) and os.path.exists(self.stats_file):
-            data = self._read_dataset()
-        else:
-            data = self._generate_dataset_files()
+        self._seq_lens = []
+        for index, stats_file in enumerate(self.stats_files):
+            if os.path.exists(stats_file):
+                data = self._read_dataset(index)
+            else:
+                data = self._generate_dataset_files(index)
 
-        self._seq_len = data.shape[0]
-        self.features = list(data.items())
-        self._num_features = len(self.features)
+            self._seq_lens.append(data.shape[0])
+            # Final dataset features are used if not specified
+            if not self.features:
+                self.features = list(data.keys())
+            self._num_features = len(self.features)
 
 
-    def _read_dataset(self) -> pd.DataFrame:
-        skip_header = 0 if self.combined else 1
-        data = np.genfromtxt(self.dataset_path, delimiter=self.separator,
-                             dtype=np.float32, skip_header=skip_header)
-        data = pd.DataFrame(data)
+    def _read_dataset(self, dataset_index: int) -> pd.DataFrame:
+        data = pd.read_csv(self.dataset_paths[dataset_index], sep=self.separator)
         return data
 
 
-    def _generate_dataset_files(self) -> pd.DataFrame:
+    def _generate_dataset_files(self, dataset_index: int) -> pd.DataFrame:
         os.makedirs(self.processed_dir, exist_ok=True)
-        data = None
-        if not self.combined:
-            if not os.path.exists(self.dataset_path):
-                raise FileNotFoundError(f"Dataset file {self.dataset_path} does not exist.")
-            raw_data = self._read_dataset()
-            data = self._read_dataset()
-        else:
-            test_str = 'train' if self.training else 'test'
-            for csv_file in glob.glob(os.path.join(self.path, test_str, '*.csv')):
-                part_data = pd.read_csv(csv_file, sep=self.separator)
-                if data is None:
-                    data = part_data
-                else:
-                    data = pd.concat([data, part_data])
+        if not os.path.exists(self.dataset_paths[dataset_index]):
+            raise FileNotFoundError(f"Dataset file {self.dataset_paths[dataset_index]} does not exist.")
+        data = self._read_dataset(dataset_index)
+
+        save_statistics(data, self.stats_files[dataset_index])
 
         # Drop columns with NaN values and notify the user
         nan_columns = data.columns[data.isna().any()].tolist()
         if nan_columns:
             _logger.warning(f"Columns with NaN values: {nan_columns}. Dropping them.")
             data = data.dropna(axis=1, how='all')
-            if not self.combined and not self.overwrite:
-                raise ValueError("NaN or non-float values found in dataset. Please preprocess the dataset first. Or set overwrite=True.")
+            if not self.overwrite and not self.features:
+                raise ValueError("NaN or non-float values found in dataset. Please preprocess the dataset first, mention which features to use, or set overwrite=True.")
 
-        if self.combined or self.overwrite:
-            data.to_csv(self.dataset_path, index=False, header=False, sep=self.separator)
-        save_statistics(data, self.stats_file)
+        if self.overwrite:
+            data.to_csv(self.dataset_paths[dataset_index], index=False, header=True, sep=self.separator)
         return data
 
 
-    def load_data(self) -> Tuple[np.ndarray, np.ndarray]:
-        data = np.genfromtxt(self.dataset_path, delimiter=self.separator, dtype=np.float32)
+    @functools.cache
+    def load_data(self, dataset_index: int) -> Tuple[np.ndarray, np.ndarray]:
+        data = pd.read_csv(self.dataset_paths[dataset_index], sep=self.separator)
         if self.training:
             target = np.zeros(data.shape[0])
         else:
-            raise NotImplementedError("Test data not implemented yet.")
+            target = data[self.anomaly_feature].to_numpy()
 
-        if self.standardize_fn is not None:
-            data = self.standardize_fn(data)
+        if self.standardize_fns[dataset_index] is not None:
+            data = self.standardize_fns[dataset_index](data)
 
-        return data, target
+        if self.features:
+            data = data[self.features]
+
+        return data.to_numpy(dtype=np.float32), target
 
 
     def __getitem__(self, item: int) -> Tuple[Tuple[torch.Tensor], Tuple[torch.Tensor]]:
         if not (0 <= item < len(self)):
             raise ValueError('Out of bounds')
+        inputs, targets = self.load_data(item)
 
-        if self.inputs is None or self.targets is None:
-            self.inputs, self.targets = self.load_data()
-
-        return (torch.as_tensor(self.inputs),), (torch.as_tensor(self.targets),)
+        return (torch.as_tensor(inputs),), (torch.as_tensor(targets),)
 
 
     def __len__(self) -> Optional[int]:
-        return 1
+        return len(self._seq_lens)
 
     @property
     def seq_len(self) -> Union[int, List[int]]:
-        return self._seq_len
+        return self._seq_lens
 
     @property
     def num_features(self) -> int:

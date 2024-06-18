@@ -11,3 +11,4 @@ from .swat_dataset import SWaTDataset
 from .tep_dataset import TEPDataset
 from .wadi_dataset import WADIDataset
 from .generic_dataset import GenericDataset
+from .chem_dataset import ChemDataset
