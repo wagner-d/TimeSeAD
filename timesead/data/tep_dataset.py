@@ -77,6 +77,9 @@ class TEPDataset(BaseTSDataset):
         self.faults = set(faults)
 
         if not self._check_preprocessed():
+            if not self._check_exists():
+                raise RuntimeError('Dataset not found. Please visit https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6C3JR1 to download the dataset zip file and extract the contents to data/TEP_harvard/ folder.')
+
             if not preprocess:
                 raise RuntimeError('Dataset needs to be processed for proper working. Pass preprocess=True to setup the dataset.')
 
@@ -183,6 +186,13 @@ class TEPDataset(BaseTSDataset):
         return {
             'onevsrest': {'class': OneVsRestTargetTransform, 'args': dict(normal_class=0, replace_labels=True)}
         }
+
+    def _check_exists(self):
+        for file in ['TEP_FaultFree_Testing.RData', 'TEP_Faulty_Testing.RData', 'TEP_FaultFree_Training.RData',
+                    'TEP_Faulty_Training.RData']:
+            if not os.path.exists(os.path.join(self.path, file)):
+                return False
+        return True
 
     def _check_preprocessed(self):
         if not os.path.exists(os.path.join(self.processed_dir, 'TEP_FaultFree_Training_stats.npz')):
