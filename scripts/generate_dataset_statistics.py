@@ -13,7 +13,7 @@ from timesead.utils.metadata import PROJECT_ROOT
 from timesead.utils.sys_utils import check_path
 from timesead.utils.utils import str2cls
 from timesead.utils.plot_utils import set_style
-from timesead.plots import plot_mean_distribution, plot_anomaly_position_distribution, plot_anomaly_length_distribution
+from timesead.plots.dataset_plots import plot_mean_distribution, plot_anomaly_position_distribution, plot_anomaly_length_distribution
 from timesead.data.statistics import compute_feature_statistics, compute_anomaly_positions, compute_anomaly_lengths, \
     compute_total_time_steps
 
