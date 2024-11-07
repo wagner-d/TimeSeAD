@@ -48,14 +48,16 @@ class TokenEmbedding(nn.Module):
 
 
 class DataEmbedding(nn.Module):
-    def __init__(self, c_in: int, d_model: int, dropout: float = 0.0):
+    def __init__(self, c_in: int, d_model: int, dropout: float = 0.0, use_pos: bool = True):
         super(DataEmbedding, self).__init__()
 
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
-        self.position_embedding = PositionalEmbedding(d_model=d_model)
+        self.position_embedding = PositionalEmbedding(d_model=d_model) if use_pos else None
 
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
-        x = self.value_embedding(x) + self.position_embedding(x)
+        x = self.value_embedding(x)
+        if self.position_embedding:
+            x = x + self.position_embedding(x)
         return self.dropout(x)

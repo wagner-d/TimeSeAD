@@ -28,6 +28,7 @@ setup(
         'pyreadr',
         'pyod',
         'eif==1.0.2',
+        'einops'
     ],
     extras_require={
         'experiments': [

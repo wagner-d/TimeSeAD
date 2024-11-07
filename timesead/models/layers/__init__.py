@@ -6,6 +6,6 @@ from .same_pad import calc_causal_same_pad, calc_same_pad, SameZeroPad1d, SameCa
 from .anom_attention import AnomalyAttention, AttentionLayer
 from .embed import DataEmbedding
 from .conv_block import ConvBlock
-
-
-
+from .autocorrelation import AutoCorrelationLayer, AutoCorrelation
+from .fourier_correlation import FourierBlock, FourierCrossAttention
+from .multi_wavelet_correlation import MultiWaveletCross, MultiWaveletTransform
