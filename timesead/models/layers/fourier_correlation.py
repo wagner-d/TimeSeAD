@@ -27,7 +27,7 @@ def get_frequency_modes(seq_len, modes=64, mode_select_method='random'):
 
 # ########## fourier layer #############
 class FourierBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, seq_len, modes=0, mode_select_method='random'):
+    def __init__(self, in_channels, out_channels, seq_len, num_heads=8, modes=0, mode_select_method='random'):
         super(FourierBlock, self).__init__()
         # print('fourier enhanced block used!')
         """
@@ -40,9 +40,9 @@ class FourierBlock(nn.Module):
 
         self.scale = (1 / (in_channels * out_channels))
         self.weights1 = nn.Parameter(
-            self.scale * torch.rand(8, in_channels // 8, out_channels // 8, len(self.index), dtype=torch.float))
+            self.scale * torch.rand(num_heads, in_channels // num_heads, out_channels // num_heads, len(self.index), dtype=torch.float))
         self.weights2 = nn.Parameter(
-            self.scale * torch.rand(8, in_channels // 8, out_channels // 8, len(self.index), dtype=torch.float))
+            self.scale * torch.rand(num_heads, in_channels // num_heads, out_channels // num_heads, len(self.index), dtype=torch.float))
 
     # Complex multiplication
     def compl_mul1d(self, order, x, weights):

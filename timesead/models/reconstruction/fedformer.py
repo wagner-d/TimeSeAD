@@ -53,6 +53,7 @@ class FEDformer(BaseModel):
             encoder_self_att = FourierBlock(in_channels=model_dim,
                                             out_channels=model_dim,
                                             seq_len=self.seq_len,
+                                            num_heads=num_heads,
                                             modes=self.modes,
                                             mode_select_method=self.mode_select)
         # Encoder
