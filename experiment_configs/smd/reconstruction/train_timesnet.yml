@@ -21,6 +21,7 @@ training_param_grid:
       - 64
     e_layers:
       - 2
+      - 4
     d_ff:
       - 64
     dropout:
@@ -31,4 +32,5 @@ training_param_grid:
       window:
         args:
           window_size:
+            - 50
             - 100
