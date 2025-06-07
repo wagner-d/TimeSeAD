@@ -252,6 +252,8 @@ class LSTMAEAnomalyDetector(AnomalyDetector):
                     break
                 except (torch.linalg.LinAlgError, RuntimeError):
                     continue
+            else:
+                raise RuntimeError('Could not compute a valid covariance matrix!')
         precision = cov
         torch.cholesky_inverse(cholesky, out=precision)
 
