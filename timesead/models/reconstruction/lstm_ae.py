@@ -242,15 +242,15 @@ class LSTMAEAnomalyDetector(AnomalyDetector):
 
         try:
             cholesky = torch.linalg.cholesky(cov)
-        except torch.linalg.LinAlgError:
+        except (torch.linalg.LinAlgError, RuntimeError):
             # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal
             # until it becomes positive definite
-            while True:
+            for _ in range(100):
                 cov.diagonal().add_(1e-4)
                 try:
                     cholesky = torch.linalg.cholesky(cov)
                     break
-                except torch.linalg.LinAlgError:
+                except (torch.linalg.LinAlgError, RuntimeError):
                     continue
         precision = cov
         torch.cholesky_inverse(cholesky, out=precision)
