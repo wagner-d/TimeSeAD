@@ -111,25 +111,19 @@ class LSTMPredictionAnomalyDetector(PredictionAnomalyDetector):
         cov = torch.matmul(errors.T, errors)
         cov /= errors.shape[0] - 1
 
-        # Add a small epsilon to the diagonal of the matrix to make it non-singular
-        cov.diagonal().add_(1e-5)
-        # This construction ensures that the resulting precision matrix is pos. semi-definite, even if the condition
-        # number of the cov matrix is large
-
-        try:
-            cholesky = torch.linalg.cholesky(cov)
-        except (torch.linalg.LinAlgError, RuntimeError):
-            # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal
-            # until it becomes positive definite
-            for _ in range(100):
-                cov.diagonal().add_(1e-4)
-                try:
-                    cholesky = torch.linalg.cholesky(cov)
+        for i in range(5, 0, -1):
+            try:
+                cov.diagonal().add_(10**-i)
+                cholesky = torch.linalg.cholesky(cov)
+                if not torch.isnan(cholesky).any():
                     break
-                except (torch.linalg.LinAlgError, RuntimeError):
-                    continue
-            else:
-                raise RuntimeError('Could not compute a valid covariance matrix!')
+            except (torch.linalg.LinAlgError, RuntimeError):
+                # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal
+                # until it becomes positive definite
+                continue
+        else:
+            raise RuntimeError('Could not compute a valid covariance matrix!')
+
         precision = cov
         torch.cholesky_inverse(cholesky, out=precision)
 
