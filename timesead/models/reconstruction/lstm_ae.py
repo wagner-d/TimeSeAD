@@ -241,9 +241,9 @@ class LSTMAEAnomalyDetector(AnomalyDetector):
                 cholesky = torch.linalg.cholesky(cov)
                 if not torch.isnan(cholesky).any():
                     break
-            except (torch.linalg.LinAlgError, RuntimeError):
-                # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal
-                # until it becomes positive definite
+            except Exception as e:
+                print(f"Error occurred while computing Cholesky decomposition: {e}, trying to fix by adding small value to diagonal.")
+                # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal until it becomes positive definite
                 continue
         else:
             raise RuntimeError('Could not compute a valid covariance matrix!')
