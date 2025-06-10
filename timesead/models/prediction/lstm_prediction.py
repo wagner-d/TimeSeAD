@@ -111,14 +111,14 @@ class LSTMPredictionAnomalyDetector(PredictionAnomalyDetector):
         cov = torch.matmul(errors.T, errors)
         cov /= errors.shape[0] - 1
 
-        for i in range(5, 0, -1):
+        for i in range(5, -3, -1):
             try:
                 cov.diagonal().add_(10**-i)
                 cholesky = torch.linalg.cholesky(cov)
                 if not torch.isnan(cholesky).any():
                     break
             except Exception as e:
-                print(f"Error occurred while computing Cholesky decomposition: {e}, trying to fix by adding small value to diagonal.")
+                print(f"Cholesky decomposition failed: {e}, trying to fix by adding small value to diagonal.")
                 # If the covariance matrix is not positive definite, we can try to add a small value to the diagonal until it becomes positive definite
                 continue
         else:
